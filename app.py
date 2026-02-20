@@ -5,7 +5,6 @@ import urllib.parse
 
 class ListaComprasPro:
     def __init__(self):
-        # Base de dados organizada pelas categorias do seu PDF
         if 'categorias' not in st.session_state:
             st.session_state.categorias = {
                 "Mercearia 🍞": ["Arroz", "Feijão", "Açúcar", "Café", "Macarrão", "Óleo", "Farinha de Trigo", "Milho Verde", "Extrato de Tomate", "Biscoitos", "Maionese", "Azeite"],
@@ -47,7 +46,7 @@ app = ListaComprasPro()
 
 st.title("📝 Lista de Compras Categorizada")
 
-# Barra Lateral (Sidebar) - Agora com o botão de envio aqui!
+# Barra Lateral (Sidebar)
 with st.sidebar:
     st.header("⚙️ Ferramentas")
     if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
@@ -63,21 +62,28 @@ with st.sidebar:
 
     st.divider()
 
-    # --- BOTÃO WHATSAPP MOVIDO PARA CÁ ---
-    # Coletamos os itens marcados para saber se o botão deve funcionar
-    itens_selecionados_para_envio = []
-    for chave, valor in st.session_state.items():
-        if chave.startswith("check_") and valor:
-            item_nome = chave.replace("check_", "")
-            itens_selecionados_para_envio.append(item_nome)
+    # Coleta itens marcados
+    selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if st.button("🟢 ENVIAR PARA WHATSAPP", use_container_width=True):
-        if itens_selecionados_para_envio:
-            link_final = app.gerar_whatsapp(itens_selecionados_para_envio)
-            st.markdown(f'''
-                <a href="{link_final}" target="_blank" style="text-decoration: none;">
-                    <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px;">
-                        CONFIRMAR E ABRIR WHATSAPP [X]
-                    </div>
-                </a>
-            ''',
+        if selecionados:
+            link = app.gerar_whatsapp(selecionados)
+            # Versão simplificada para evitar o erro de sintaxe
+            st.markdown(f'<a href="{link}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold;">ABRIR WHATSAPP [X]</div></a>', unsafe_allow_html=True)
+        else:
+            st.warning("Marque os itens primeiro!")
+
+# --- Listagem Principal ---
+col1, col2 = st.columns(2)
+todas_cats = list(st.session_state.categorias.items())
+ponto = len(todas_cats) // 2
+
+for i, (cat, produtos) in enumerate(todas_cats):
+    coluna = col1 if i < ponto else col2
+    with coluna:
+        st.subheader(cat)
+        for p in produtos:
+            c1, c2 = st.columns([5, 1])
+            c1.checkbox(p, key=f"check_{p}")
+            if c2.button("❌", key=f"del_{p}"):
+                app.remover_item(cat, p)
