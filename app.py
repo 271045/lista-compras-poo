@@ -5,6 +5,7 @@ import urllib.parse
 
 class ListaComprasPro:
     def __init__(self):
+        # Base de dados baseada no seu PDF
         if 'categorias' not in st.session_state:
             st.session_state.categorias = {
                 "Mercearia 🍞": ["Arroz", "Feijão", "Açúcar", "Café", "Macarrão", "Óleo", "Farinha de Trigo", "Milho Verde", "Extrato de Tomate", "Biscoitos", "Maionese", "Azeite"],
@@ -34,22 +35,21 @@ class ListaComprasPro:
         lista_final.sort()
         data = datetime.now().strftime("%d/%m/%Y")
         
-        # Criamos o texto básico sem emojis primeiro
+        # Estratégia: Usar um caractere que o WhatsApp entende como "visto"
+        # Em vez de tentar enviar o desenho, enviamos a codificação segura
         cabecalho = f"*LISTA DE COMPRAS - {data}*\n\n"
         corpo = ""
         for item in lista_final:
-            corpo += f"- {item}\n" # Usamos um traço simples por agora
+            # O código %E2%9C%85 é interpretado diretamente pelo navegador como ✅
+            corpo += "- " + item + "\n"
         
-        texto_puro = cabecalho + corpo
+        texto_completo = cabecalho + corpo
         
-        # Transformamos em link seguro
-        link_base = urllib.parse.quote(texto_puro)
+        # Fazemos a substituição do traço pelo código do emoji na URL final
+        link_safe = urllib.parse.quote(texto_completo)
+        link_final = link_safe.replace("-", "%E2%9C%85")
         
-        # Aqui está o segredo: substituímos o traço pelo código do emoji ✅ direto no link
-        # O código %E2%9C%85 é o "DNA" do check verde para a internet
-        link_com_check = link_base.replace("-", "%E2%9C%85")
-        
-        return f"https://wa.me/?text={link_com_check}"
+        return f"https://wa.me/?text={link_final}"
 
 # --- Interface ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
@@ -89,7 +89,7 @@ st.divider()
 if st.button("🟢 ENVIAR LISTA PARA O WHATSAPP", use_container_width=True):
     if itens_selecionados:
         link_final = app.gerar_whatsapp(itens_selecionados)
-        # Link direto sem passar por filtros do Streamlit
-        st.write(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">ABRIR WHATSAPP E ENVIAR ✅</div></a>', unsafe_allow_html=True)
+        # Usamos um botão HTML direto para evitar que o Streamlit mude o link
+        st.markdown(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">CONFIRMAR ENVIO ✅</div></a>', unsafe_allow_html=True)
     else:
         st.warning("Selecione os itens antes de enviar.")
