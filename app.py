@@ -2,106 +2,98 @@ import streamlit as st
 from datetime import datetime
 import urllib.parse
 
-class ListaCompras:
-    """Classe que gerencia a lógica e os dados da lista de compras."""
-    
+class ListaComprasPro:
     def __init__(self):
-        # Inicializa a lista de produtos no estado da sessão se não existir
-        if 'produtos' not in st.session_state:
-            st.session_state.produtos = ["Arroz", "Feijão", "Sabão em pó", "Sabão em barra", "Desinfetante"]
+        # Organização dos itens por categorias conforme o PDF enviado
+        if 'categorias' not in st.session_state:
+            st.session_state.categorias = {
+                "Mercearia 🍞": ["Arroz", "Feijão", "Açúcar", "Café", "Macarrão", "Óleo", "Farinha de Trigo", "Milho Verde", "Extrato de Tomate", "Biscoitos"],
+                "Limpeza 🧼": ["Sabão em Pó", "Sabão em Barra", "Desinfetante", "Água Sanitária", "Detergente", "Amaciante", "Álcool", "Saco de Lixo", "Bombril", "Veja"],
+                "Higiene 🪥": ["Pasta de Dente", "Sabonete", "Shampoo", "Condicionador", "Desodorante", "Papel Higiênico", "Fio Dental", "Algodão"],
+                "Frios & Laticínios 🧀": ["Mussarela", "Presunto", "Leite", "Manteiga", "Iogurte", "Requeijão", "Ovos", "Salsicha"],
+                "Frutas & Verduras 🍎": ["Banana", "Maçã", "Batata", "Cebola", "Alho", "Tomate", "Alface", "Limão", "Cenoura"],
+                "Açougue 🥩": ["Carne Moída", "Bife", "Frango", "Linguiça", "Bacon", "Calabresa", "Costelinha"]
+            }
+        
+        # Estado dos itens selecionados
+        if 'selecionados' not in st.session_state:
+            st.session_state.selecionados = []
 
-    def adicionar_item(self, nome):
-        """Adiciona um novo item à lista, evitando duplicados."""
-        if nome and nome not in st.session_state.produtos:
-            st.session_state.produtos.append(nome)
-            return True
-        return False
-
-    def remover_item(self, nome):
-        """Remove um item da lista e recarrega a interface."""
-        if nome in st.session_state.produtos:
-            st.session_state.produtos.remove(nome)
+    def adicionar_item(self, categoria, nome):
+        if nome and nome not in st.session_state.categorias[categoria]:
+            st.session_state.categorias[categoria].append(nome)
             st.rerun()
 
-    def gerar_link_whatsapp(self, itens_selecionados):
-        """Ordena os itens alfabeticamente e gera o link formatado."""
-        if not itens_selecionados:
-            return None
-        
-        # Ordenação Alfabética (conforme solicitado)
-        itens_selecionados.sort()
-        
-        data_hoje = datetime.now().strftime("%d/%m/%Y")
-        mensagem = f"*Lista de Compras - {data_hoje}*\n\n"
-        
-        for item in itens_selecionados:
-            mensagem += f"✅ {item}\n"
-            
-        # Codifica a mensagem para o formato de URL do WhatsApp
-        texto_url = urllib.parse.quote(mensagem)
-        return f"https://wa.me/?text={texto_url}"
+    def remover_item(self, categoria, nome):
+        st.session_state.categorias[categoria].remove(nome)
+        st.rerun()
 
-# --- Instanciação e Interface ---
+    def gerar_whatsapp(self, lista_final):
+        # Ordenação Alfabética
+        lista_final.sort()
+        data = datetime.now().strftime("%d/%m/%Y")
+        msg = f"*🛒 Minha Lista de Compras - {data}*\n\n"
+        for item in lista_final:
+            msg += f"✅ {item}\n"
+        return f"https://wa.me/?text={urllib.parse.quote(msg)}"
 
-# Configuração da Página
-st.set_page_config(page_title="Minha Lista POO", page_icon="🛒")
+# --- Interface Estilizada ---
+st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 
-# Criação do objeto principal
-minha_lista = ListaCompras()
+app = ListaComprasPro()
 
-st.title("🛒 Lista de Compras Inteligente")
+st.title("📝 Lista de Compras Categorizada")
+st.info("Baseada no seu modelo de PDF. Marque o que precisa comprar.")
 
-# 1. Seção para adicionar itens
-with st.expander("➕ Adicionar Novo Produto"):
-    col_input, col_btn = st.columns([3, 1])
-    with col_input:
-        novo = st.text_input("Nome do item:", key="input_item", placeholder="Ex: Macarrão")
-    with col_btn:
-        if st.button("Incluir"):
-            if minha_lista.adicionar_item(novo):
-                st.rerun()
+# Sidebar para adicionar novos itens
+with st.sidebar:
+    st.header("⚙️ Gerenciar Itens")
+    cat_escolhida = st.selectbox("Escolha a Categoria:", list(st.session_state.categorias.keys()))
+    novo_nome = st.text_input("Nome do Produto:")
+    if st.button("➕ Adicionar à Lista"):
+        app.adicionar_item(cat_escolhida, novo_nome)
 
-st.write("---")
+# Exibição das Categorias em Colunas (Layout igual ao PDF)
+col1, col2 = st.columns(2)
+itens_marcados = []
 
-# 2. Seção de exibição e seleção
-selecionados = []
-st.subheader("Selecione o que precisa comprar:")
+categorias_lista = list(st.session_state.categorias.items())
+metade = len(categorias_lista) // 2
 
-for item in st.session_state.produtos:
-    col_check, col_del = st.columns([5, 1])
-    
-    with col_check:
-        # Se marcado, o item entra na lista de 'selecionados'
-        if st.checkbox(item, key=f"cb_{item}"):
-            selecionados.append(item)
-            
-    with col_del:
-        # Botão para excluir o item da base
-        if st.button("🗑️", key=f"btn_{item}"):
-            minha_lista.remover_item(item)
+# Coluna 1
+with col1:
+    for cat, produtos in categorias_lista[:metade]:
+        st.subheader(cat)
+        for p in produtos:
+            c1, c2 = st.columns([4, 1])
+            if c1.checkbox(p, key=f"check_{p}"):
+                itens_marcados.append(p)
+            if c2.button("🗑️", key=f"del_{p}"):
+                app.remover_item(cat, p)
 
-st.write("---")
+# Coluna 2
+with col2:
+    for cat, produtos in categorias_lista[metade:]:
+        st.subheader(cat)
+        for p in produtos:
+            c1, c2 = st.columns([4, 1])
+            if c1.checkbox(p, key=f"check_{p}"):
+                itens_marcados.append(p)
+            if c2.button("🗑️", key=f"del_{p}"):
+                app.remover_item(cat, p)
 
-# 3. Botão Final de Envio
-if st.button("🚀 Enviar via WhatsApp (Ordem A-Z)"):
-    link = minha_lista.gerar_link_whatsapp(selecionados)
-    if link:
-        # Estilização do botão de link para ficar verde como o WhatsApp
+st.divider()
+
+# Botão de Envio Flutuante/Destaque
+if st.button("🟢 ENVIAR LISTA PARA WHATSAPP", use_container_width=True):
+    if itens_marcados:
+        link = app.gerar_whatsapp(itens_marcados)
         st.markdown(f"""
             <a href="{link}" target="_blank">
-                <button style="
-                    background-color: #25D366;
-                    color: white;
-                    border: none;
-                    padding: 15px 30px;
-                    border-radius: 10px;
-                    width: 100%;
-                    font-size: 18px;
-                    font-weight: bold;
-                    cursor: pointer;">
-                    Confirmar Envio ✅
+                <button style="background-color: #25D366; color: white; border: none; padding: 20px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 20px; cursor: pointer;">
+                    CONFIRMAR E ABRIR WHATSAPP 📱
                 </button>
             </a>
-            """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
     else:
-        st.warning("Por favor, marque pelo menos um item da lista.")
+        st.warning("Selecione pelo menos um item para enviar.")
