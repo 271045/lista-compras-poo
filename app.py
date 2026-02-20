@@ -62,16 +62,21 @@ with st.sidebar:
 
     st.divider()
 
-    # Coleta itens marcados
+    # Identifica itens marcados
     selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
 
-    if st.button("🟢 ENVIAR PARA WHATSAPP", use_container_width=True):
-        if selecionados:
-            link = app.gerar_whatsapp(selecionados)
-            # Versão simplificada para evitar o erro de sintaxe
-            st.markdown(f'<a href="{link}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold;">ABRIR WHATSAPP [X]</div></a>', unsafe_allow_html=True)
-        else:
-            st.warning("Marque os itens primeiro!")
+    # Botão Único: Enviar Lista
+    if selecionados:
+        link = app.gerar_whatsapp(selecionados)
+        st.markdown(f"""
+            <a href="{link}" target="_blank" style="text-decoration: none;">
+                <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+                    ENVIAR LISTA [X]
+                </div>
+            </a>
+        """, unsafe_allow_html=True)
+    else:
+        st.info("Selecione itens na lista ao lado para habilitar o envio.")
 
 # --- Listagem Principal ---
 col1, col2 = st.columns(2)
