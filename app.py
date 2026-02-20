@@ -34,16 +34,11 @@ class ListaComprasPro:
     def gerar_whatsapp(self, lista_final):
         lista_final.sort()
         data = datetime.now().strftime("%d/%m/%Y")
-        
-        # Usando o padrão [X] que você gostou
         cabecalho = f"--- LISTA DE COMPRAS ({data}) ---\n\n"
         corpo = ""
         for item in lista_final:
             corpo += f"[X] {item}\n"
-        
         texto_completo = cabecalho + corpo
-        
-        # O quote garante que espaços e colchetes virem um link válido
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
 # --- Interface Streamlit ---
@@ -52,40 +47,37 @@ app = ListaComprasPro()
 
 st.title("📝 Lista de Compras Categorizada")
 
+# Barra Lateral (Sidebar) - Agora com o botão de envio aqui!
 with st.sidebar:
-    st.header("⚙️ Opções")
+    st.header("⚙️ Ferramentas")
     if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
         app.limpar_selecoes()
+    
     st.divider()
+    
     st.subheader("➕ Novo Item")
     cat_escolhida = st.selectbox("Categoria:", list(st.session_state.categorias.keys()))
     novo_nome = st.text_input("Produto:")
-    if st.button("Adicionar"):
+    if st.button("Adicionar Item", use_container_width=True):
         app.adicionar_item(cat_escolhida, novo_nome)
 
-# Exibição em duas colunas como no modelo PDF
-col1, col2 = st.columns(2)
-itens_selecionados = []
-todas_categorias = list(st.session_state.categorias.items())
-ponto_corte = len(todas_categorias) // 2
+    st.divider()
 
-for i, (cat, produtos) in enumerate(todas_categorias):
-    coluna_atual = col1 if i < ponto_corte else col2
-    with coluna_atual:
-        st.subheader(cat)
-        for p in produtos:
-            c_check, c_del = st.columns([5, 1])
-            if c_check.checkbox(p, key=f"check_{p}"):
-                itens_selecionados.append(p)
-            if c_del.button("❌", key=f"del_{p}"):
-                app.remover_item(cat, p)
+    # --- BOTÃO WHATSAPP MOVIDO PARA CÁ ---
+    # Coletamos os itens marcados para saber se o botão deve funcionar
+    itens_selecionados_para_envio = []
+    for chave, valor in st.session_state.items():
+        if chave.startswith("check_") and valor:
+            item_nome = chave.replace("check_", "")
+            itens_selecionados_para_envio.append(item_nome)
 
-st.divider()
-
-if st.button("🟢 ENVIAR PARA WHATSAPP", use_container_width=True):
-    if itens_selecionados:
-        link_final = app.gerar_whatsapp(itens_selecionados)
-        # Link HTML direto para evitar que o navegador altere o texto
-        st.markdown(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">CONFIRMAR ENVIO [X]</div></a>', unsafe_allow_html=True)
-    else:
-        st.warning("Selecione os itens antes de enviar.")
+    if st.button("🟢 ENVIAR PARA WHATSAPP", use_container_width=True):
+        if itens_selecionados_para_envio:
+            link_final = app.gerar_whatsapp(itens_selecionados_para_envio)
+            st.markdown(f'''
+                <a href="{link_final}" target="_blank" style="text-decoration: none;">
+                    <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px;">
+                        CONFIRMAR E ABRIR WHATSAPP [X]
+                    </div>
+                </a>
+            ''',
