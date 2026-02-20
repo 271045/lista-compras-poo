@@ -5,7 +5,7 @@ import urllib.parse
 
 class ListaComprasPro:
     def __init__(self):
-        # Base de dados baseada no seu PDF
+        # Base de dados organizada pelas categorias do seu PDF
         if 'categorias' not in st.session_state:
             st.session_state.categorias = {
                 "Mercearia 🍞": ["Arroz", "Feijão", "Açúcar", "Café", "Macarrão", "Óleo", "Farinha de Trigo", "Milho Verde", "Extrato de Tomate", "Biscoitos", "Maionese", "Azeite"],
@@ -35,23 +35,18 @@ class ListaComprasPro:
         lista_final.sort()
         data = datetime.now().strftime("%d/%m/%Y")
         
-        # Estratégia: Usar um caractere que o WhatsApp entende como "visto"
-        # Em vez de tentar enviar o desenho, enviamos a codificação segura
-        cabecalho = f"*LISTA DE COMPRAS - {data}*\n\n"
+        # Usando o padrão [X] que você gostou
+        cabecalho = f"--- LISTA DE COMPRAS ({data}) ---\n\n"
         corpo = ""
         for item in lista_final:
-            # O código %E2%9C%85 é interpretado diretamente pelo navegador como ✅
-            corpo += "- " + item + "\n"
+            corpo += f"[X] {item}\n"
         
         texto_completo = cabecalho + corpo
         
-        # Fazemos a substituição do traço pelo código do emoji na URL final
-        link_safe = urllib.parse.quote(texto_completo)
-        link_final = link_safe.replace("-", "%E2%9C%85")
-        
-        return f"https://wa.me/?text={link_final}"
+        # O quote garante que espaços e colchetes virem um link válido
+        return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface ---
+# --- Interface Streamlit ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 app = ListaComprasPro()
 
@@ -59,7 +54,7 @@ st.title("📝 Lista de Compras Categorizada")
 
 with st.sidebar:
     st.header("⚙️ Opções")
-    if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
+    if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
         app.limpar_selecoes()
     st.divider()
     st.subheader("➕ Novo Item")
@@ -68,6 +63,7 @@ with st.sidebar:
     if st.button("Adicionar"):
         app.adicionar_item(cat_escolhida, novo_nome)
 
+# Exibição em duas colunas como no modelo PDF
 col1, col2 = st.columns(2)
 itens_selecionados = []
 todas_categorias = list(st.session_state.categorias.items())
@@ -86,10 +82,10 @@ for i, (cat, produtos) in enumerate(todas_categorias):
 
 st.divider()
 
-if st.button("🟢 ENVIAR LISTA PARA O WHATSAPP", use_container_width=True):
+if st.button("🟢 ENVIAR PARA WHATSAPP", use_container_width=True):
     if itens_selecionados:
         link_final = app.gerar_whatsapp(itens_selecionados)
-        # Usamos um botão HTML direto para evitar que o Streamlit mude o link
-        st.markdown(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">CONFIRMAR ENVIO ✅</div></a>', unsafe_allow_html=True)
+        # Link HTML direto para evitar que o navegador altere o texto
+        st.markdown(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">CONFIRMAR ENVIO [X]</div></a>', unsafe_allow_html=True)
     else:
         st.warning("Selecione os itens antes de enviar.")
