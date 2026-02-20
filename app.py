@@ -34,18 +34,22 @@ class ListaComprasPro:
         lista_final.sort()
         data = datetime.now().strftime("%d/%m/%Y")
         
-        # Montando a mensagem com strings simples e seguras
-        cabecalho = "*LISTA DE COMPRAS - " + data + "*\n\n"
+        # Criamos o texto básico sem emojis primeiro
+        cabecalho = f"*LISTA DE COMPRAS - {data}*\n\n"
         corpo = ""
         for item in lista_final:
-            # Usando o caractere direto com codificação forçada
-            corpo += "V " + item + "\n"
+            corpo += f"- {item}\n" # Usamos um traço simples por agora
         
-        # Substituindo o 'V' pelo emoji de forma que o WhatsApp entenda na URL
-        mensagem = cabecalho + corpo
-        mensagem_final = mensagem.replace("V ", "✅ ")
+        texto_puro = cabecalho + corpo
         
-        return "https://wa.me/?text=" + urllib.parse.quote(mensagem_final)
+        # Transformamos em link seguro
+        link_base = urllib.parse.quote(texto_puro)
+        
+        # Aqui está o segredo: substituímos o traço pelo código do emoji ✅ direto no link
+        # O código %E2%9C%85 é o "DNA" do check verde para a internet
+        link_com_check = link_base.replace("-", "%E2%9C%85")
+        
+        return f"https://wa.me/?text={link_com_check}"
 
 # --- Interface ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
@@ -85,6 +89,7 @@ st.divider()
 if st.button("🟢 ENVIAR LISTA PARA O WHATSAPP", use_container_width=True):
     if itens_selecionados:
         link_final = app.gerar_whatsapp(itens_selecionados)
-        st.write(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">ABRIR WHATSAPP E ENVIAR</div></a>', unsafe_allow_html=True)
+        # Link direto sem passar por filtros do Streamlit
+        st.write(f'<a href="{link_final}" target="_blank" style="text-decoration: none;"><div style="background-color: #25D366; color: white; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 22px;">ABRIR WHATSAPP E ENVIAR ✅</div></a>', unsafe_allow_html=True)
     else:
         st.warning("Selecione os itens antes de enviar.")
