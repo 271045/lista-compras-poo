@@ -2,11 +2,9 @@
 import streamlit as st
 from datetime import datetime
 import urllib.parse
-# Importamos pytz para corrigir o fuso horário
 try:
     import pytz
 except ImportError:
-    # Se não tiver instalado, o Streamlit instalará via requirements.txt
     pass
 
 class ListaComprasPro:
@@ -18,12 +16,14 @@ class ListaComprasPro:
                 "Higiene 🪥": ["Pasta de Dente", "Sabonete", "Shampoo", "Condicionador", "Desodorante", "Papel Higiênico", "Fio Dental", "Algodão"],
                 "Frios & Laticínios 🧀": ["Mussarela", "Presunto", "Leite", "Manteiga", "Iogurte", "Requeijão", "Ovos", "Salsicha", "Margarina"],
                 "Frutas & Verduras 🍎": ["Banana", "Maçã", "Batata", "Cebola", "Alho", "Tomate", "Alface", "Limão", "Cenoura"],
-                "Açougue 🥩": ["Carne Moída", "Bife", "Frango", "Linguiça", "Bacon", "Calabresa", "Costelinha"]
+                "Açougue 🥩": ["Carne Moída", "Bife", "Frango", "Linguiça", "Bacon", "Calabresa", "Costelinha"],
+                "Outros 📦": []  # Nova categoria adicionada
             }
 
-    def adicionar_item(self, categoria, nome):
-        if nome and nome not in st.session_state.categorias[categoria]:
-            st.session_state.categorias[categoria].append(nome)
+    def adicionar_item(self, nome):
+        # Agora adiciona sempre na categoria Outros
+        if nome and nome not in st.session_state.categorias["Outros 📦"]:
+            st.session_state.categorias["Outros 📦"].append(nome)
             st.rerun()
 
     def remover_item(self, categoria, nome):
@@ -38,8 +38,6 @@ class ListaComprasPro:
 
     def gerar_whatsapp(self, lista_final):
         lista_final.sort()
-        
-        # CORREÇÃO DA DATA: Forçando o fuso horário de São Paulo/Brasil
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
@@ -55,7 +53,6 @@ class ListaComprasPro:
 # --- Interface Streamlit ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 
-# CSS para lixeira discreta e alinhamento
 st.markdown("""
     <style>
     .stButton > button {
@@ -78,11 +75,11 @@ with st.sidebar:
     
     st.divider()
     
-    st.subheader("➕ Novo Item")
-    cat_escolhida = st.selectbox("Categoria:", list(st.session_state.categorias.keys()))
-    novo_nome = st.text_input("Produto:")
-    if st.button("Adicionar Item", use_container_width=True):
-        app.adicionar_item(cat_escolhida, novo_nome)
+    st.subheader("➕ Novo Item (Outros)")
+    # Removi o selectbox de categoria para ser mais rápido
+    novo_nome = st.text_input("Nome do produto:")
+    if st.button("Adicionar em Outros", use_container_width=True):
+        app.adicionar_item(novo_nome)
 
     st.divider()
 
@@ -109,6 +106,8 @@ for i, (cat, produtos) in enumerate(todas_cats):
     coluna = col1 if i < ponto else col2
     with coluna:
         st.subheader(cat)
+        if not produtos and cat == "Outros 📦":
+            st.write("*Nenhum item extra.*")
         for p in produtos:
             c_check, c_del = st.columns([0.85, 0.15])
             c_check.checkbox(p, key=f"check_{p}")
