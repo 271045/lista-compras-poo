@@ -96,4 +96,55 @@ class ListaComprasPro:
             cabecalho += f"\n*MOTIVO:* {motivo.upper()}\n"
         corpo = "\n" + "\n".join([f"[X] {item}" for item in lista_final])
         assinatura = "\n\nby ®rvrs"
-        return f"https://wa.me/?
+        return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
+
+# --- Interface ---
+st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
+
+st.markdown("""
+    <style>
+    .main-title { text-align: center; border-bottom: 3px solid #000; padding: 10px; font-size: 24px; font-weight: bold; }
+    .stMarkdown h3 { background-color: #000 !important; color: #fff !important; padding: 8px; text-align: center; font-size: 14px !important; border-radius: 8px; margin-top: 15px; }
+    div.stButton > button { font-weight: bold; border-radius: 10px; height: 3.5em; background-color: #f0f2f6; }
+    .stCheckbox { padding: 5px 0; }
+    </style>
+    """, unsafe_allow_html=True)
+
+app = ListaComprasPro()
+st.markdown('<div class="main-title">LISTA DE COMPRAS</div>', unsafe_allow_html=True)
+
+with st.sidebar:
+    st.header("⚙️ CONFIGURAÇÃO")
+    # Campo do Motivo com chave de reset
+    motivo_compra = st.text_input("📍 Motivo / Evento:", placeholder="Ex: Churrasco", key=f"motivo_input_{st.session_state.reset_trigger}")
+    
+    if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
+        app.limpar_tudo()
+    
+    st.divider()
+    with st.form("add_form", clear_on_submit=True):
+        novo = st.text_input("➕ Novo Item:")
+        if st.form_submit_button("ADICIONAR", use_container_width=True):
+            if novo: app.adicionar_item(novo)
+    
+    st.divider()
+    selecionados = [k.split("_")[1] for k, v in st.session_state.items() if k.startswith("check_") and v]
+
+    if selecionados:
+        url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
+        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:18px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:12px;font-size:16px;">📲 WHATSAPP (TEXTO)</div></a>', unsafe_allow_html=True)
+        
+        img_bytes = app.gerar_imagem(selecionados, motivo_compra)
+        st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name="lista.png", mime="image/png", use_container_width=True)
+
+# Listagem
+col1, col2, col3 = st.columns(3)
+todas_cats = list(st.session_state.categorias.items())
+for i, (cat, produtos) in enumerate(todas_cats):
+    target_col = [col1, col2, col3][i % 3]
+    with target_col:
+        st.subheader(cat)
+        for p in produtos:
+            st.checkbox(p, key=f"check_{p}_{cat}")
+
+st.markdown("<br><hr><p style='text-align:center; color:grey;'>2026 | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
