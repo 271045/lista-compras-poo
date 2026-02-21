@@ -17,18 +17,13 @@ class ListaComprasPro:
                 "Frios & Laticínios 🧀": ["Mussarela", "Presunto", "Leite", "Manteiga", "Iogurte", "Requeijão", "Ovos", "Salsicha", "Margarina"],
                 "Frutas & Verduras 🍎": ["Banana", "Maçã", "Batata", "Cebola", "Alho", "Tomate", "Alface", "Limão", "Cenoura"],
                 "Açougue 🥩": ["Carne Moída", "Bife", "Frango", "Linguiça", "Bacon", "Calabresa", "Costelinha"],
-                "Outros 📦": []  # Nova categoria adicionada
+                "Outros 📦": []
             }
 
     def adicionar_item(self, nome):
-        # Agora adiciona sempre na categoria Outros
         if nome and nome not in st.session_state.categorias["Outros 📦"]:
             st.session_state.categorias["Outros 📦"].append(nome)
             st.rerun()
-
-    def remover_item(self, categoria, nome):
-        st.session_state.categorias[categoria].remove(nome)
-        st.rerun()
 
     def limpar_selecoes(self):
         for chave in st.session_state.keys():
@@ -53,14 +48,10 @@ class ListaComprasPro:
 # --- Interface Streamlit ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 
+# Estilo para remover margens desnecessárias agora que não há colunas duplas por item
 st.markdown("""
     <style>
-    .stButton > button {
-        padding: 0px !important;
-        height: 2rem !important;
-        border: none !important;
-        background-color: transparent !important;
-    }
+    .stCheckbox { margin-bottom: -10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -76,7 +67,6 @@ with st.sidebar:
     st.divider()
     
     st.subheader("➕ Novo Item (Outros)")
-    # Removi o selectbox de categoria para ser mais rápido
     novo_nome = st.text_input("Nome do produto:")
     if st.button("Adicionar em Outros", use_container_width=True):
         app.adicionar_item(novo_nome)
@@ -107,12 +97,10 @@ for i, (cat, produtos) in enumerate(todas_cats):
     with coluna:
         st.subheader(cat)
         if not produtos and cat == "Outros 📦":
-            st.write("*Nenhum item extra.*")
+            st.write("*Adicione itens na lateral.*")
         for p in produtos:
-            c_check, c_del = st.columns([0.85, 0.15])
-            c_check.checkbox(p, key=f"check_{p}")
-            if c_del.button("🗑️", key=f"del_{p}"):
-                app.remover_item(cat, p)
+            # Removida a coluna da lixeira, agora é uma linha simples
+            st.checkbox(p, key=f"check_{p}")
 
 # --- Rodapé ---
 st.write("<br><br>", unsafe_allow_html=True)
