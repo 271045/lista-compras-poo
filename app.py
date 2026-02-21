@@ -64,7 +64,7 @@ st.markdown("""
 
 app = ListaComprasPro()
 
-st.title("📝 Lista de Compras Categorizada")
+st.title("📝 Lista de Compras")
 
 # Barra Lateral (Sidebar)
 with st.sidebar:
@@ -121,3 +121,4 @@ st.markdown(
     "</div>", 
     unsafe_allow_html=True
 )
+
