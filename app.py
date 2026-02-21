@@ -10,16 +10,17 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Itens extraídos do seu arquivo e agora organizados alfabeticamente
+            # Itens do arquivo com os novos acréscimos (Flocão e Farinha de Milho)
             raw_data = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", 
                     "CAFÉ", "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "ESSÊNCIA", 
-                    "EXTRATO TOMATE", "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", 
-                    "FEIJÃO", "FERMENTO", "FILTRO CAFÉ", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", 
-                    "LEITE", "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", 
-                    "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", "MOSTARDA", 
-                    "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"
+                    "EXTRATO TOMATE", "FARINHA DE MILHO", "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", 
+                    "FARINHA TEMPERADA", "FEIJÃO", "FERMENTO", "FILTRO CAFÉ", "FLOCÃO DE MILHO", "FÓSFORO", "FUBÁ", 
+                    "GELATINA", "KETCHUP", "LASANHA", "LEITE", "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", 
+                    "MACARRÃO", "MAIONESE", "MAISENA", "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", 
+                    "MOLHO INGLÊS", "MOLHO TOMATE", "MOSTARDA", "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", 
+                    "TAPIOCA", "TEMPERO", "TODDY"
                 ],
                 "LIMPEZA": [
                     "ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BICARBONATO", "BOMBRIL", "BUCHA BANHO", 
@@ -56,14 +57,14 @@ class ListaComprasPro:
                 ],
                 "OUTROS": []
             }
-            # Garante que tudo comece em ordem alfabética
+            # Aplica a ordem alfabética em todas as categorias
             st.session_state.categorias = {k: sorted(v) for k, v in raw_data.items()}
 
     def adicionar_item(self, nome):
         nome_upper = nome.upper()
         if nome_upper and nome_upper not in st.session_state.categorias["OUTROS"]:
             st.session_state.categorias["OUTROS"].append(nome_upper)
-            st.session_state.categorias["OUTROS"].sort() # Ordena a lista de outros ao adicionar
+            st.session_state.categorias["OUTROS"].sort()
             st.rerun()
 
     def limpar_selecoes(self):
@@ -84,7 +85,7 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface Estilizada ---
+# --- Interface ---
 st.set_page_config(page_title="Lista de Compras", layout="wide")
 
 st.markdown("""
@@ -113,7 +114,6 @@ st.markdown("""
 app = ListaComprasPro()
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
-# --- Sidebar ---
 with st.sidebar:
     st.header("CONTROLE")
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
@@ -135,7 +135,6 @@ with st.sidebar:
         link = app.gerar_whatsapp(selecionados)
         st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR PARA WHATSAPP</div></a>', unsafe_allow_html=True)
 
-# --- Colunas ---
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 
@@ -149,7 +148,6 @@ for i, (cat, produtos) in enumerate(todas_cats):
         for p in produtos:
             st.checkbox(p, key=f"check_{p}_{cat}")
 
-# --- Rodapé ---
 st.write("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.markdown("<p style='text-align:center; color:grey;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
