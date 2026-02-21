@@ -50,37 +50,43 @@ class ListaComprasPro:
 
     def gerar_imagem(self, itens, motivo):
         largura = 550
-        espaco_item = 40
-        altura_total = 200 + (len(itens) * espaco_item) + 80
+        espaco_item = 45
+        # Altura dinâmica baseada na existência ou não do motivo
+        base_altura = 220 if motivo else 150
+        altura_total = base_altura + (len(itens) * espaco_item) + 100
+        
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
         
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
+            font_titulo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+            font_motivo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+            font_texto = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
         except:
-            font = ImageFont.load_default()
-            font_small = ImageFont.load_default()
+            font_titulo = font_motivo = font_texto = ImageFont.load_default()
 
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font)
-        draw.text((20, 55), f"DATA: {data_br}", fill=(100, 100, 100), font=font_small)
+        # Cabeçalho
+        draw.text((30, 30), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font_titulo)
+        draw.text((30, 65), f"DATA: {data_br}", fill=(100, 100, 100), font=font_texto)
         
         y_linha = 110
         if motivo:
-            motivo_limpo = motivo.encode('utf-8').decode('utf-8').upper()
-            draw.text((20, 90), f"MOTIVO: {motivo_limpo}", fill=(0, 50, 150), font=font_small)
-            y_linha = 130
+            motivo_limpo = f"MOTIVO: {motivo.upper()}"
+            draw.text((30, 100), motivo_limpo, fill=(0, 50, 150), font=font_motivo)
+            y_linha = 150
         
-        draw.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=3)
-        y = y_linha + 20
+        draw.line((30, y_linha, 520, y_linha), fill=(0, 0, 0), width=3)
+        
+        y = y_linha + 30
         for item in itens:
-            draw.text((30, y), f"[X] {item.encode('utf-8').decode('utf-8')}", fill=(0, 0, 0), font=font_small)
+            draw.text((40, y), f"[X] {item}", fill=(0, 0, 0), font=font_texto)
             y += espaco_item
             
-        draw.text((20, y + 20), "by ®rvrs", fill=(150, 150, 150), font=font_small)
+        draw.text((30, y + 30), "by ®rvrs", fill=(150, 150, 150), font=font_texto)
+        
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='PNG')
         return img_byte_arr.getvalue()
@@ -101,15 +107,10 @@ st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state
 
 st.markdown("""
     <style>
-    /* Ajustes para ecrãs pequenos */
     .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 3px solid #000; padding: 10px; font-size: 24px; }
-    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 8px; text-align: center; font-size: 14px !important; border-radius: 5px; }
-    
-    /* Aumentar área de toque do checkbox */
-    .stCheckbox { padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
-    
-    /* Botões da barra lateral */
-    div.stButton > button { height: 3em; font-weight: bold; border-radius: 10px; }
+    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 10px; text-align: center; font-size: 14px !important; border-radius: 8px; margin-top: 20px; }
+    .stCheckbox { padding: 12px 0; border-bottom: 1px solid #f9f9f9; }
+    div.stButton > button { height: 3.5em; font-weight: bold; border-radius: 12px; font-size: 16px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -117,8 +118,8 @@ app = ListaComprasPro()
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("📋 MENU")
-    motivo_compra = st.text_input("📍 Motivo:", placeholder="Onde vais comprar?", key=f"motivo_ti_{st.session_state.reset_trigger}")
+    st.header("📋 CONFIGURAÇÃO")
+    motivo_compra = st.text_input("📍 Motivo / Local:", placeholder="Ex: Festa na Fazenda", key=f"motivo_ti_{st.session_state.reset_trigger}")
     
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
@@ -126,7 +127,7 @@ with st.sidebar:
     st.divider()
     with st.form("add_item_form", clear_on_submit=True):
         novo = st.text_input("➕ Novo Item:")
-        if st.form_submit_button("ADICIONAR", use_container_width=True):
+        if st.form_submit_button("ADICIONAR À LISTA", use_container_width=True):
             app.adicionar_item(novo)
     
     st.divider()
@@ -134,11 +135,12 @@ with st.sidebar:
 
     if selecionados:
         url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
-        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:18px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:12px;font-size:16px;">📲 ENVIAR WHATSAPP</div></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:20px;border-radius:15px;text-align:center;font-weight:bold;margin-bottom:15px;font-size:18px;box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📲 ENVIAR WHATSAPP</div></a>', unsafe_allow_html=True)
         
         img_bytes = app.gerar_imagem(sorted(selecionados, key=remover_acentos), motivo_compra)
-        st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name=f"lista_{motivo_compra or 'compras'}.png", mime="image/png", use_container_width=True)
+        st.download_button(label="🖼️ BAIXAR IMAGEM DA LISTA", data=img_bytes, file_name=f"lista_{motivo_compra or 'compras'}.png", mime="image/png", use_container_width=True)
 
+# Exibição da Lista
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 for i, (cat, produtos) in enumerate(todas_cats):
@@ -148,4 +150,4 @@ for i, (cat, produtos) in enumerate(todas_cats):
         for p in produtos:
             st.checkbox(p, key=f"check_{p}_{cat}")
 
-st.markdown("<hr><p style='text-align:center; color:grey;'>2026 | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
+st.markdown("<br><hr><p style='text-align:center; color:grey;'>2026 | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
