@@ -10,7 +10,7 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Itens organizados fielmente conforme a estrutura visual do seu PDF
+            # Lista exata extraída do seu arquivo PDF
             st.session_state.categorias = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "BOLACHAS", "CAFÉ", 
@@ -40,6 +40,13 @@ class ListaComprasPro:
                 "AÇOUGUE": [
                     "BACON", "BIFE (BOI)", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", "CUPIM", 
                     "FRANGO", "LINGUIÇA", "LOMBO", "PEIXE"
+                ],
+                "TEMPEROS": [
+                    "ALHO E SAL", "CALDO DE CARNE", "CANELA", "FUMAÇA", "PÁPRICA", "AÇÚCAR MASCAVO ", 
+                    "CRAVO", "LOURO", "NOZ-MOSCADA", "ORÉGANO", "CEBOLA EM PÓ", "ALHO EM PÓ", "PIMENTA DO REINO"
+                ],
+                "BEBIDAS": [
+                    "ÁGUA MINERAL", "CERVEJA", "REFRIGERANTE", "SUCO", "VINHO"
                 ],
                 "HORTIFRUTI": [
                     "ALFACE", "ALHO", "BANANA", "BATATA", "CEBOLA", "CENOURA", "LARANJA", 
@@ -102,7 +109,6 @@ app = ListaComprasPro()
 
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
-# --- Sidebar ---
 with st.sidebar:
     st.header("CONTROLE")
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
@@ -114,17 +120,16 @@ with st.sidebar:
         app.adicionar_item(novo_nome)
     st.divider()
     
-    # Coleta os itens selecionados de forma segura (ignorando a chave única interna)
     selecionados = []
     for k, v in st.session_state.items():
         if k.startswith("check_") and v:
-            # O nome do item está entre a primeira '_' e a segunda '_'
             partes = k.split("_")
-            selecionados.append(partes[1])
+            if len(partes) >= 2:
+                selecionados.append(partes[1])
 
     if selecionados:
         link = app.gerar_whatsapp(selecionados)
-        st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR LISTA PARA WHATSAPP</div></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR PARA WHATSAPP</div></a>', unsafe_allow_html=True)
 
 # --- Layout de Colunas ---
 col1, col2, col3 = st.columns(3)
@@ -138,7 +143,6 @@ for i, (cat, produtos) in enumerate(todas_cats):
     with target_col:
         st.subheader(cat)
         for p in produtos:
-            # O SEGREDO: A chave agora é 'check_NOME_CATEGORIA' para ser sempre única
             st.checkbox(p, key=f"check_{p}_{cat}")
 
 # --- Rodapé ---
