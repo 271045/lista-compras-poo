@@ -10,7 +10,7 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Todos os itens extraídos fielmente do seu arquivo PDF
+            # Itens organizados fielmente conforme a estrutura visual do seu PDF
             st.session_state.categorias = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "BOLACHAS", "CAFÉ", 
@@ -93,7 +93,6 @@ st.markdown("""
         font-size: 16px !important;
         text-transform: uppercase;
         margin-top: 15px !important;
-        letter-spacing: 1px;
     }
     .stCheckbox { margin-bottom: -12px; }
     </style>
@@ -115,13 +114,20 @@ with st.sidebar:
         app.adicionar_item(novo_nome)
     st.divider()
     
-    selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
+    # Coleta os itens selecionados de forma segura (ignorando a chave única interna)
+    selecionados = []
+    for k, v in st.session_state.items():
+        if k.startswith("check_") and v:
+            # O nome do item está entre a primeira '_' e a segunda '_'
+            partes = k.split("_")
+            selecionados.append(partes[1])
+
     if selecionados:
         link = app.gerar_whatsapp(selecionados)
         st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR LISTA PARA WHATSAPP</div></a>', unsafe_allow_html=True)
 
-# --- Layout de Colunas do PDF ---
-col1, col2, col3 = st.columns(3) # Usei 3 colunas para acomodar melhor todos os itens no PC
+# --- Layout de Colunas ---
+col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 
 for i, (cat, produtos) in enumerate(todas_cats):
@@ -132,7 +138,8 @@ for i, (cat, produtos) in enumerate(todas_cats):
     with target_col:
         st.subheader(cat)
         for p in produtos:
-            st.checkbox(p, key=f"check_{p}")
+            # O SEGREDO: A chave agora é 'check_NOME_CATEGORIA' para ser sempre única
+            st.checkbox(p, key=f"check_{p}_{cat}")
 
 # --- Rodapé ---
 st.write("<br><br>", unsafe_allow_html=True)
