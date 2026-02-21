@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-# Função para evitar erros de acentuação na imagem
+# Função para evitar erros de acentuação na imagem (converte AÇÚCAR -> ACUCAR)
 def txt_img(texto):
     if not texto: return ""
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto))
@@ -33,8 +33,9 @@ class ListaComprasPro:
             }
             st.session_state.categorias = {k: sorted(v, key=txt_img) for k, v in raw_data.items()}
         
-        if 'reset_trigger' not in st.session_state:
-            st.session_state.reset_trigger = 0
+        # O segredo: contador de reset
+        if 'count' not in st.session_state:
+            st.session_state.count = 0
 
     def adicionar_item(self, nome):
         nome_up = str(nome).upper()
@@ -44,15 +45,17 @@ class ListaComprasPro:
             st.rerun()
 
     def limpar_tudo(self):
+        # Desmarcar os itens (isso o Streamlit permite)
         for chave in list(st.session_state.keys()):
-            if chave.startswith("check_") or chave.startswith("motivo_val"):
-                st.session_state[chave] = "" if chave.startswith("motivo") else False
-        st.session_state.reset_trigger += 1
+            if chave.startswith("check_"):
+                st.session_state[chave] = False
+        
+        # Para o Motivo, apenas mudamos a versão da Key
+        st.session_state.count += 1
         st.rerun()
 
     def gerar_imagem(self, itens, motivo_texto):
         largura = 500
-        # Espaço garantido para o cabeçalho
         y_lista = 130
         altura_total = y_lista + (len(itens) * 30) + 70
         
@@ -62,13 +65,12 @@ class ListaComprasPro:
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Textos fixos
         draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
         draw.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
         
-        # MOTIVO - Buscando diretamente o texto
-        texto_final_motivo = f"MOTIVO: {txt_img(motivo_texto)}" if motivo_texto else "MOTIVO: NAO INFORMADO"
-        draw.text((20, 75), texto_final_motivo, fill=(0, 51, 153))
+        # MOTIVO na Imagem
+        texto_motivo = f"MOTIVO: {txt_img(motivo_texto)}" if motivo_texto else "MOTIVO: NAO INFORMADO"
+        draw.text((20, 75), texto_motivo, fill=(0, 51, 153))
         
         draw.line((20, 110, 480, 110), fill=(0, 0, 0), width=2)
         
@@ -89,7 +91,7 @@ st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state
 st.markdown("""
     <style>
     .main-title { text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; font-weight: bold; }
-    .stMarkdown h3 { background-color: #000 !important; color: #fff !important; padding: 10px; text-align: center; font-size: 14px !important; border-radius: 8px; margin-top: 15px; }
+    .stMarkdown h3 { background-color: #000 !important; color: #fff !important; padding: 10px; text-align: center; font-size: 14px !important; border-radius: 8px; }
     div.stButton > button { font-weight: bold; border-radius: 10px; height: 3.5em; }
     </style>
     """, unsafe_allow_html=True)
@@ -100,8 +102,8 @@ st.markdown('<div class="main-title">LISTA DE COMPRAS</div>', unsafe_allow_html=
 with st.sidebar:
     st.header("⚙️ OPÇÕES")
     
-    # GARANTIA: O motivo agora é amarrado a uma chave fixa no estado
-    motivo_lista = st.text_input("📍 Motivo / Local:", placeholder="Ex: Churrasco", key=f"motivo_val_{st.session_state.reset_trigger}")
+    # A Key muda cada vez que limpamos (count aumenta), forçando o campo a ficar vazio
+    motivo_input = st.text_input("📍 Motivo / Local:", placeholder="Ex: Churrasco", key=f"motivo_v{st.session_state.count}")
     
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
@@ -116,21 +118,21 @@ with st.sidebar:
     selecionados = [k.split("_")[1] for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if selecionados:
-        # Gerar link WA
+        # Link WA
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         msg = f"*--- LISTA DE COMPRAS ({data_br}) ---*\n"
-        if motivo_lista: msg += f"\n*MOTIVO:* {motivo_lista.upper()}\n"
+        if motivo_input: msg += f"\n*MOTIVO:* {motivo_input.upper()}\n"
         msg += "\n" + "\n".join([f"[X] {i}" for i in selecionados]) + "\n\nby ®rvrs"
         url_wa = f"https://wa.me/?text={urllib.parse.quote(msg)}"
         
-        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:18px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:12px;">📲 ENVIAR WHATSAPP</div></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:18px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:12px;">📲 WHATSAPP</div></a>', unsafe_allow_html=True)
         
-        # Gerar Imagem
-        img_bytes = app.gerar_imagem(selecionados, motivo_lista)
+        # Imagem
+        img_bytes = app.gerar_imagem(selecionados, motivo_input)
         st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name="lista.png", mime="image/png", use_container_width=True)
 
-# Exibição
+# Listagem
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 for i, (cat, produtos) in enumerate(todas_cats):
