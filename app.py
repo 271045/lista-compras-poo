@@ -12,6 +12,7 @@ except ImportError:
     pass
 
 def remover_acentos(texto):
+    if not texto: return ""
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto))
                   if unicodedata.category(c) != 'Mn')
 
@@ -49,47 +50,43 @@ class ListaComprasPro:
         st.rerun()
 
     def gerar_imagem(self, itens, motivo):
-        largura = 550
-        espaco_item = 45
-        # Altura dinâmica baseada na existência ou não do motivo
-        base_altura = 220 if motivo else 150
-        altura_total = base_altura + (len(itens) * espaco_item) + 100
+        largura = 500
+        espaco_item = 30  # Reduzido para ser mais compacto
+        
+        # Cálculo de altura garantindo espaço para o motivo
+        altura_cabecalho = 140 if motivo else 100
+        altura_total = altura_cabecalho + (len(itens) * espaco_item) + 60
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
         
-        try:
-            font_titulo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
-            font_motivo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-            font_texto = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
-        except:
-            font_titulo = font_motivo = font_texto = ImageFont.load_default()
-
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Cabeçalho
-        draw.text((30, 30), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font_titulo)
-        draw.text((30, 65), f"DATA: {data_br}", fill=(100, 100, 100), font=font_texto)
+        # Títulos e Data
+        draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
+        draw.text((20, 45), f"DATA: {data_br}", fill=(80, 80, 80))
         
-        y_linha = 110
+        y_atual = 75
         if motivo:
-            motivo_limpo = f"MOTIVO: {motivo.upper()}"
-            draw.text((30, 100), motivo_limpo, fill=(0, 50, 150), font=font_motivo)
-            y_linha = 150
+            motivo_texto = f"MOTIVO: {str(motivo).upper()}"
+            draw.text((20, 75), motivo_texto, fill=(0, 51, 153))
+            y_atual = 105
         
-        draw.line((30, y_linha, 520, y_linha), fill=(0, 0, 0), width=3)
+        # Linha divisória
+        draw.line((20, y_atual, 480, y_atual), fill=(0, 0, 0), width=2)
         
-        y = y_linha + 30
+        # Itens da lista
+        y_itens = y_atual + 15
         for item in itens:
-            draw.text((40, y), f"[X] {item}", fill=(0, 0, 0), font=font_texto)
-            y += espaco_item
+            draw.text((35, y_itens), f"[X] {item}", fill=(0, 0, 0))
+            y_itens += espaco_item
             
-        draw.text((30, y + 30), "by ®rvrs", fill=(150, 150, 150), font=font_texto)
+        draw.text((20, y_itens + 10), "by ®rvrs", fill=(150, 150, 150))
         
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='PNG')
-        return img_byte_arr.getvalue()
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        return buf.getvalue()
 
     def gerar_whatsapp_texto(self, lista_final, motivo):
         lista_final.sort(key=remover_acentos)
@@ -102,15 +99,15 @@ class ListaComprasPro:
         assinatura = "\n\nby ®rvrs"
         return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
 
-# --- Layout Mobile ---
+# --- Layout ---
 st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 3px solid #000; padding: 10px; font-size: 24px; }
-    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 10px; text-align: center; font-size: 14px !important; border-radius: 8px; margin-top: 20px; }
-    .stCheckbox { padding: 12px 0; border-bottom: 1px solid #f9f9f9; }
-    div.stButton > button { height: 3.5em; font-weight: bold; border-radius: 12px; font-size: 16px; }
+    .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; }
+    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 6px; text-align: center; font-size: 14px !important; border-radius: 4px; }
+    .stCheckbox { padding: 4px 0; }
+    div.stButton > button { font-weight: bold; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -118,8 +115,8 @@ app = ListaComprasPro()
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("📋 CONFIGURAÇÃO")
-    motivo_compra = st.text_input("📍 Motivo / Local:", placeholder="Ex: Festa na Fazenda", key=f"motivo_ti_{st.session_state.reset_trigger}")
+    st.header("📋 OPÇÕES")
+    motivo_compra = st.text_input("📍 Motivo:", placeholder="Ex: Festa na Fazenda", key=f"motivo_ti_{st.session_state.reset_trigger}")
     
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
@@ -127,7 +124,7 @@ with st.sidebar:
     st.divider()
     with st.form("add_item_form", clear_on_submit=True):
         novo = st.text_input("➕ Novo Item:")
-        if st.form_submit_button("ADICIONAR À LISTA", use_container_width=True):
+        if st.form_submit_button("ADICIONAR", use_container_width=True):
             app.adicionar_item(novo)
     
     st.divider()
@@ -135,12 +132,12 @@ with st.sidebar:
 
     if selecionados:
         url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
-        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:20px;border-radius:15px;text-align:center;font-weight:bold;margin-bottom:15px;font-size:18px;box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📲 ENVIAR WHATSAPP</div></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-bottom:10px;">📲 WHATSAPP</div></a>', unsafe_allow_html=True)
         
         img_bytes = app.gerar_imagem(sorted(selecionados, key=remover_acentos), motivo_compra)
-        st.download_button(label="🖼️ BAIXAR IMAGEM DA LISTA", data=img_bytes, file_name=f"lista_{motivo_compra or 'compras'}.png", mime="image/png", use_container_width=True)
+        st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name=f"lista_{remover_acentos(motivo_compra) or 'compras'}.png", mime="image/png", use_container_width=True)
 
-# Exibição da Lista
+# Lista de Itens
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 for i, (cat, produtos) in enumerate(todas_cats):
@@ -150,4 +147,4 @@ for i, (cat, produtos) in enumerate(todas_cats):
         for p in produtos:
             st.checkbox(p, key=f"check_{p}_{cat}")
 
-st.markdown("<br><hr><p style='text-align:center; color:grey;'>2026 | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
+st.markdown("<br><hr><p style='text-align:center; color:grey; font-size:10px;'>2026 | ®rvrs</p>", unsafe_allow_html=True)
