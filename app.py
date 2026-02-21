@@ -30,6 +30,10 @@ class ListaComprasPro:
                 "OUTROS": []
             }
             st.session_state.categorias = {k: sorted(v, key=remover_acentos) for k, v in raw_data.items()}
+        
+        # Inicializa o controle de reset se não existir
+        if 'reset_trigger' not in st.session_state:
+            st.session_state.reset_trigger = 0
 
     def adicionar_item(self, nome):
         nome_upper = nome.upper()
@@ -39,15 +43,13 @@ class ListaComprasPro:
             st.rerun()
 
     def limpar_tudo(self):
-        # Limpa as marcações
+        # Desmarca os itens
         for chave in list(st.session_state.keys()):
             if chave.startswith("check_"):
                 st.session_state[chave] = False
         
-        # Limpa o motivo usando a chave do widget
-        if "motivo_input" in st.session_state:
-            st.session_state["motivo_input"] = ""
-            
+        # Altera o trigger para forçar o campo de texto a "nascer" de novo vazio
+        st.session_state.reset_trigger += 1
         st.rerun()
 
     def gerar_imagem(self, itens, motivo):
@@ -58,7 +60,7 @@ class ListaComprasPro:
         d = ImageDraw.Draw(img)
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
-        d.text((20, 20), f"LISTA DE COMPRAS", fill=(0, 0, 0))
+        d.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
         d.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
         y_linha = 100
         if motivo:
@@ -103,16 +105,18 @@ st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=Tr
 with st.sidebar:
     st.header("📋 CONFIGURAÇÃO")
     
-    # Campo de texto para o motivo
-    motivo_compra = st.text_input("Motivo da Compra:", placeholder="Ex: Festa na Fazenda", key="motivo_input")
+    # O SEGREDO: A key muda toda vez que clicamos em limpar, forçando o widget a resetar
+    motivo_compra = st.text_input(
+        "Motivo da Compra:", 
+        placeholder="Ex: Festa na Fazenda", 
+        key=f"motivo_ti_{st.session_state.reset_trigger}"
+    )
     
     st.divider()
-    # O botão chama a função de limpeza
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
     
     st.divider()
-    # Para o novo item, usamos um pequeno formulário para limpar o campo automaticamente após adicionar
     with st.form("add_item_form", clear_on_submit=True):
         novo = st.text_input("➕ Adicionar Item (Outros):")
         submitted = st.form_submit_button("ADICIONAR ITEM", use_container_width=True)
