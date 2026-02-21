@@ -47,7 +47,7 @@ class ListaComprasPro:
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 app = ListaComprasPro()
 
-st.title("📝 Lista de Compras Categorizada")
+st.title("📝 Lista de Compras")
 
 # Barra Lateral (Sidebar)
 with st.sidebar:
@@ -103,3 +103,4 @@ st.markdown(
     "</div>", 
     unsafe_allow_html=True
 )
+
