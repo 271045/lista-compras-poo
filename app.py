@@ -38,16 +38,33 @@ class ListaComprasPro:
         for item in lista_final:
             corpo += f"[X] {item}\n"
         
-        # Adicionando os 2 espaços e a assinatura no final da mensagem do WhatsApp
         assinatura_wa = "\n\nby ®rvrs"
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
 # --- Interface Streamlit ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
+
+# CSS para reduzir o espaço entre os itens (Compact Mode)
+st.markdown("""
+    <style>
+    [data-testid="stVerticalBlock"] > div {
+        margin-top: -15px;
+        margin-bottom: -15px;
+    }
+    .stCheckbox {
+        margin-bottom: -15px;
+    }
+    button[kind="secondary"] {
+        padding: 0px;
+        height: 25px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 app = ListaComprasPro()
 
-st.title("📝 Lista de Compras")
+st.title("📝 Lista de Compras Categorizada")
 
 # Barra Lateral (Sidebar)
 with st.sidebar:
@@ -65,7 +82,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Identifica itens marcados
     selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if selecionados:
@@ -78,7 +94,7 @@ with st.sidebar:
             </a>
         """, unsafe_allow_html=True)
     else:
-        st.info("Selecione itens na lista para enviar.")
+        st.info("Selecione itens na lista.")
 
 # --- Listagem Principal ---
 col1, col2 = st.columns(2)
@@ -90,12 +106,14 @@ for i, (cat, produtos) in enumerate(todas_cats):
     with coluna:
         st.subheader(cat)
         for p in produtos:
-            c1, c2 = st.columns([5, 1])
+            c1, c2 = st.columns([6, 1])
             c1.checkbox(p, key=f"check_{p}")
-            if c2.button("❌", key=f"del_{p}"):
+            # Trocado X por lixeira 🗑️
+            if c2.button("🗑️", key=f"del_{p}"):
                 app.remover_item(cat, p)
 
-# --- Rodapé (Footer) ---
+# --- Rodapé ---
+st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: grey; font-size: 0.8em;'>"
@@ -103,4 +121,3 @@ st.markdown(
     "</div>", 
     unsafe_allow_html=True
 )
-
