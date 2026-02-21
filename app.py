@@ -10,8 +10,8 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Inventário extraído exatamente do seu documento
-            st.session_state.categorias = {
+            # Itens extraídos do seu arquivo e agora organizados alfabeticamente
+            raw_data = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", 
                     "CAFÉ", "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "ESSÊNCIA", 
@@ -22,43 +22,48 @@ class ListaComprasPro:
                     "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"
                 ],
                 "LIMPEZA": [
-                    "DETERGENTE", "ÁGUA SANITÁRIA", "ÁLCOOL", "LISOFORME", "AMACIANTE", "SABÃO EM PÓ", 
-                    "SABÃO BARRA", "SACO DE LIXO", "DESINFETANTE", "VEJA", "BICARBONATO", "PEDRA SANITÁRIA", 
-                    "RODO", "VASSOURA", "LUSTRA MÓVEIS", "BOMBRIL", "BUCHA COZINHA", "PEROBA", "PASTA PINHO", 
-                    "CÊRA", "BUCHA BANHO", "LÂMPADA", "PAPEL ALUMÍNIO", "VELA"
+                    "ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BICARBONATO", "BOMBRIL", "BUCHA BANHO", 
+                    "BUCHA COZINHA", "CÊRA", "DESINFETANTE", "DETERGENTE", "LÂMPADA", "LISOFORME", 
+                    "LUSTRA MÓVEIS", "PAPEL ALUMÍNIO", "PASTA PINHO", "PEDRA SANITÁRIA", "PEROBA", 
+                    "RODO", "SABÃO BARRA", "SABÃO EM PÓ", "SACO DE LIXO", "VASSOURA", "VEJA", "VELA"
                 ],
                 "HIGIENE": [
-                    "ACETONA", "ALGODÃO", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "CONDICIONADOR", 
-                    "PASTA DE DENTE", "DESODORANTE", "ESCOVA DE DENTE", "PRESTO-BARBA", "SHAMPOO", 
-                    "SABONETE LÍQUIDO", "SABONETE"
+                    "ACETONA", "ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", 
+                    "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "PRESTO-BARBA", 
+                    "SABONETE", "SABONETE LÍQUIDO", "SHAMPOO"
                 ],
                 "FRIOS": [
-                    "CHEDDAR", "EMPANADO", "GORGONZOLA", "HAMBURGUER", "IOGURTE", "MANTEIGA", "MARGARINA", 
-                    "MORTADELA", "MUSSARELA", "PASTEL (MASSA)", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "SALSICHA"
+                    "CHEDDAR", "EMPANADO", "GORGONZOLA", "HAMBURGUER", "IOGURTE", "MANTEIGA", 
+                    "MARGARINA", "MORTADELA", "MUSSARELA", "PASTEL (MASSA)", "PRESUNTO", 
+                    "QUEIJO", "REQUEIJÃO", "SALSICHA"
                 ],
                 "FRUTAS / VERDURAS": [
-                    "ABÓBORA", "ALFACE", "ALHO", "BANANA", "BATATA", "BETERRABA", "CEBOLA", "CENOURA", 
-                    "CHUCHU", "LARANJA", "LIMÃO", "MAÇÃ", "MAMÃO", "MELANCIA", "MELÃO", "PÊRA", "TOMATE"
+                    "ABÓBORA", "ALFACE", "ALHO", "BANANA", "BATATA", "BETERRABA", "CEBOLA", 
+                    "CENOURA", "CHUCHU", "LARANJA", "LIMÃO", "MAÇÃ", "MAMÃO", "MELANCIA", 
+                    "MELÃO", "PÊRA", "TOMATE"
                 ],
                 "AÇOUGUE": [
-                    "ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", 
-                    "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FRALDINHA", "FRANGO", "LINGUA", "LINGUIÇA", 
-                    "LOMBO", "MÚSCULO", "PICANHA"
+                    "ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", 
+                    "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FRALDINHA", 
+                    "FRANGO", "LINGUA", "LINGUIÇA", "LOMBO", "MÚSCULO", "PICANHA"
                 ],
                 "TEMPEROS": [
-                    "AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "OREGANO", "PÁPRICA DEFUMADA", 
-                    "PÁPRICA PICANTE", "PIMENTA DO REINO"
+                    "AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "OREGANO", 
+                    "PÁPRICA DEFUMADA", "PÁPRICA PICANTE", "PIMENTA DO REINO"
                 ],
                 "BEBIDAS": [
                     "ÁGUA MINERAL", "CERVEJA", "ENERGÉTICO", "REFRIGERANTE", "SUCO", "VINHO"
                 ],
                 "OUTROS": []
             }
+            # Garante que tudo comece em ordem alfabética
+            st.session_state.categorias = {k: sorted(v) for k, v in raw_data.items()}
 
     def adicionar_item(self, nome):
         nome_upper = nome.upper()
         if nome_upper and nome_upper not in st.session_state.categorias["OUTROS"]:
             st.session_state.categorias["OUTROS"].append(nome_upper)
+            st.session_state.categorias["OUTROS"].sort() # Ordena a lista de outros ao adicionar
             st.rerun()
 
     def limpar_selecoes(self):
@@ -79,7 +84,7 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Layout Visual ---
+# --- Interface Estilizada ---
 st.set_page_config(page_title="Lista de Compras", layout="wide")
 
 st.markdown("""
