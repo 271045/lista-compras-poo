@@ -4,8 +4,6 @@ from datetime import datetime
 import urllib.parse
 import unicodedata
 import io
-
-# Importação da biblioteca de imagem
 from PIL import Image, ImageDraw
 
 try:
@@ -13,8 +11,8 @@ try:
 except ImportError:
     pass
 
-# Função para limpar o texto (remover acentos) para a imagem não bugar
-def limpar_para_imagem(texto):
+# Função para garantir que o texto saia limpo na imagem (sem bugar acento)
+def limpar_texto_imagem(texto):
     if not texto: return ""
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto))
                   if unicodedata.category(c) != 'Mn').upper()
@@ -33,18 +31,11 @@ class ListaComprasPro:
                 "BEBIDAS": ["ÁGUA MINERAL", "CERVEJA", "ENERGÉTICO", "REFRIGERANTE", "SUCO", "VINHO"],
                 "OUTROS": []
             }
-            # Ordem alfabética para a tela
-            st.session_state.categorias = {k: sorted(v, key=limpar_para_imagem) for k, v in raw_data.items()}
+            # Ordem alfabética para exibição
+            st.session_state.categorias = {k: sorted(v, key=limpar_texto_imagem) for k, v in raw_data.items()}
         
         if 'reset_trigger' not in st.session_state:
             st.session_state.reset_trigger = 0
-
-    def adicionar_item(self, nome):
-        nome_upper = str(nome).upper()
-        if nome_upper and nome_upper not in st.session_state.categorias["OUTROS"]:
-            st.session_state.categorias["OUTROS"].append(nome_upper)
-            st.session_state.categorias["OUTROS"].sort(key=limpar_para_imagem)
-            st.rerun()
 
     def limpar_tudo(self):
         for chave in list(st.session_state.keys()):
@@ -55,13 +46,14 @@ class ListaComprasPro:
 
     def gerar_imagem(self, itens, motivo):
         largura = 500
-        # Espaço reservado para o cabeçalho (Data + Motivo)
-        y_inicial_itens = 140 
-        altura_total = y_inicial_itens + (len(itens) * 30) + 60
+        espaco_linha = 30
+        y_inicial_lista = 130
+        altura_total = y_inicial_lista + (len(itens) * espaco_linha) + 60
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
         
+        # Data atual
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
@@ -69,21 +61,21 @@ class ListaComprasPro:
         draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
         draw.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
         
-        # MOTIVO (Sempre na posição 75)
-        txt_motivo = f"MOTIVO: {limpar_para_imagem(motivo)}" if motivo else "MOTIVO: NAO INFORMADO"
+        # Desenhar MOTIVO (Forçado na posição y=75)
+        txt_motivo = f"MOTIVO: {limpar_texto_imagem(motivo)}" if motivo else "MOTIVO: NAO INFORMADO"
         draw.text((20, 75), txt_motivo, fill=(0, 51, 153))
         
-        # Linha preta divisória
+        # Linha divisória
         draw.line((20, 110, 480, 110), fill=(0, 0, 0), width=2)
         
-        # Desenhar os itens sem acentos para não bugar
-        y = 130
+        # Desenhar Itens
+        y = y_inicial_lista
         for item in itens:
-            item_limpo = limpar_para_imagem(item)
+            item_limpo = limpar_texto_imagem(item)
             draw.text((35, y), f"[X] {item_limpo}", fill=(0, 0, 0))
-            y += 30
+            y += espaco_linha
             
-        draw.text((20, y + 15), "BY RVRS", fill=(180, 180, 180))
+        draw.text((20, y + 10), "BY RVRS", fill=(180, 180, 180))
         
         buf = io.BytesIO()
         img.save(buf, format='PNG')
@@ -102,12 +94,11 @@ class ListaComprasPro:
 # --- Interface ---
 st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
 
-# Estilo para mobile
 st.markdown("""
     <style>
     .main-title { text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; font-weight: bold; }
-    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 5px; text-align: center; font-size: 14px !important; border-radius: 5px; }
-    div.stButton > button { font-weight: bold; border-radius: 8px; height: 3em; }
+    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 6px; text-align: center; font-size: 14px !important; border-radius: 5px; }
+    div.stButton > button { font-weight: bold; border-radius: 10px; height: 3.5em; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -116,31 +107,32 @@ st.markdown('<div class="main-title">LISTA DE COMPRAS</div>', unsafe_allow_html=
 
 with st.sidebar:
     st.header("MENU")
-    # Campo do Motivo
-    motivo_compra = st.text_input("📍 Motivo:", placeholder="Ex: Festa Fazenda", key=f"motivo_input_{st.session_state.reset_trigger}")
+    # O campo do motivo
+    motivo_compra = st.text_input("📍 Motivo / Local:", placeholder="Ex: Festa na Fazenda", key=f"motivo_in_{st.session_state.reset_trigger}")
     
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
     
     st.divider()
-    with st.form("add_form", clear_on_submit=True):
-        novo = st.text_input("➕ Novo Item:")
+    with st.form("novo_item_form", clear_on_submit=True):
+        novo = st.text_input("➕ Adicionar Item:")
         if st.form_submit_button("ADICIONAR", use_container_width=True):
-            app.adicionar_item(novo)
+            if novo:
+                app.adicionar_item(novo)
     
     st.divider()
     selecionados = [k.split("_")[1] for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if selecionados:
-        # Enviar Texto (Com acentos normais)
+        # Texto para WhatsApp (com acentos)
         url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
         st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-bottom:10px;">📲 WHATSAPP (TEXTO)</div></a>', unsafe_allow_html=True)
         
-        # Baixar Imagem (Sem acentos para não bugar)
+        # Imagem (sem acentos para não dar erro visual)
         img_bytes = app.gerar_imagem(selecionados, motivo_compra)
         st.download_button(label="🖼️ BAIXAR IMAGEM DA LISTA", data=img_bytes, file_name="lista_compras.png", mime="image/png", use_container_width=True)
 
-# Listagem na tela principal
+# Corpo da página
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 for i, (cat, produtos) in enumerate(todas_cats):
