@@ -4,7 +4,8 @@ from datetime import datetime
 import urllib.parse
 import unicodedata
 import io
-from PIL import Image, ImageDraw
+import os
+from PIL import Image, ImageDraw, ImageFont
 
 try:
     import pytz
@@ -50,12 +51,21 @@ class ListaComprasPro:
         st.rerun()
 
     def gerar_imagem(self, itens, motivo):
-        # Largura e espaçamento compactos
-        largura = 450
-        espaco_item = 25 
+        largura = 500
+        espaco_item = 28
         
-        # Cabeçalho dinâmico
-        y_linha = 110 if motivo else 80
+        # Tentativa de carregar a fonte arial.ttf que você subirá ao GitHub
+        try:
+            # Pega o caminho do arquivo no servidor
+            caminho_fonte = os.path.join(os.getcwd(), "arial.ttf")
+            font_main = ImageFont.truetype(caminho_fonte, 20)
+            font_sub = ImageFont.truetype(caminho_fonte, 16)
+            usa_acentos = True
+        except:
+            font_main = font_sub = ImageFont.load_default()
+            usa_acentos = False # Se falhar, vamos remover acentos para a imagem ficar legível
+
+        y_linha = 115 if motivo else 85
         altura_total = y_linha + (len(itens) * espaco_item) + 60
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
@@ -64,26 +74,25 @@ class ListaComprasPro:
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Desenho do Texto (Usando a fonte padrão tratada para evitar erro de encoding)
-        draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
-        draw.text((20, 40), f"DATA: {data_br}", fill=(100, 100, 100))
+        # Cabeçalho
+        draw.text((25, 20), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font_main)
+        draw.text((25, 45), f"DATA: {data_br}", fill=(100, 100, 100), font=font_sub)
         
         if motivo:
-            # Motivo posicionado claramente
-            motivo_limpo = f"MOTIVO: {str(motivo).upper()}"
-            draw.text((20, 70), motivo_limpo, fill=(0, 51, 153))
+            txt_motivo = f"MOTIVO: {motivo.upper()}"
+            if not usa_acentos: txt_motivo = remover_acentos(txt_motivo)
+            draw.text((25, 75), txt_motivo, fill=(0, 51, 153), font=font_main)
         
-        # Linha divisória
-        draw.line((20, y_linha, largura-20, y_linha), fill=(0, 0, 0), width=2)
+        draw.line((25, y_linha, largura-25, y_linha), fill=(0, 0, 0), width=2)
         
-        # Itens (Removendo acentos apenas para a imagem se o erro persistir, 
-        # mas aqui forçamos a string limpa)
         y_itens = y_linha + 20
         for item in itens:
-            draw.text((30, y_itens), f"[X] {item}", fill=(0, 0, 0))
+            txt_item = f"[X] {item}"
+            if not usa_acentos: txt_item = remover_acentos(txt_item)
+            draw.text((35, y_itens), txt_item, fill=(0, 0, 0), font=font_sub)
             y_itens += espaco_item
             
-        draw.text((20, y_itens + 10), "by rvrs", fill=(180, 180, 180))
+        draw.text((25, y_itens + 10), "by rvrs", fill=(180, 180, 180), font=font_sub)
         
         buf = io.BytesIO()
         img.save(buf, format='PNG')
@@ -100,14 +109,13 @@ class ListaComprasPro:
         assinatura = "\n\nby ®rvrs"
         return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
 
-# --- Estilo Visual ---
+# --- Layout ---
 st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
     .main-title { font-family: sans-serif; text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; }
     .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 6px; text-align: center; font-size: 14px !important; border-radius: 4px; }
-    .stCheckbox { padding: 2px 0; }
     div.stButton > button { font-weight: bold; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
