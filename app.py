@@ -11,7 +11,6 @@ try:
 except ImportError:
     pass
 
-# Função para manter a ordem alfabética correta
 def remover_acentos(texto):
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto))
                   if unicodedata.category(c) != 'Mn')
@@ -22,7 +21,7 @@ class ListaComprasPro:
             raw_data = {
                 "MERCEARIA": ["AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", "CAFÉ", "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "ESSÊNCIA", "EXTRATO TOMATE", "FARINHA DE MILHO", "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", "FEIJÃO", "FERMENTO", "FILTRO CAFÉ", "FLOCÃO DE MILHO", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", "LEITE", "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", "MOSTARDA", "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"],
                 "LIMPEZA": ["ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BICARBONATO", "BOMBRIL", "BUCHA BANHO", "BUCHA COZINHA", "CÊRA", "DESINFETANTE", "DETERGENTE", "LÂMPADA", "LISOFORME", "LUSTRA MÓVEIS", "PAPEL ALUMÍNIO", "PASTA PINHO", "PEDRA SANITÁRIA", "PEROBA", "RODO", "SABÃO BARRA", "SABÃO EM PÓ", "SACO DE LIXO", "VASSOURA", "VEJA", "VELA"],
-                "HIGIENE": ["ACETONA", "ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "PRESTO-BARBA", "SHAMPOO", "SABONETE LÍQUIDO", "SABONETE"],
+                "HIGIENE": ["ACETONA", "ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "PRESTO-BARBA", "SABONETE", "SABONETE LÍQUIDO", "SHAMPOO"],
                 "FRIOS": ["CHEDDAR", "EMPANADO", "GORGONZOLA", "HAMBURGUER", "IOGURTE", "MANTEIGA", "MARGARINA", "MORTADELA", "MUSSARELA", "PASTEL (MASSA)", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "SALSICHA"],
                 "FRUTAS / VERDURAS": ["ABÓBORA", "ALFACE", "ALHO", "BANANA", "BATATA", "BETERRABA", "CEBOLA", "CENOURA", "CHUCHU", "LARANJA", "LIMÃO", "MAÇÃ", "MAMÃO", "MELANCIA", "MELÃO", "PÊRA", "TOMATE"],
                 "AÇOUGUE": ["ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELÃO", "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FILÉ DE PEITO", "FRALDINHA", "FRANGO", "LÍNGUA", "LINGUIÇA", "LOMBO", "MÚSCULO", "PICANHA"],
@@ -51,46 +50,37 @@ class ListaComprasPro:
 
     def gerar_imagem(self, itens, motivo):
         largura = 550
-        espaco_item = 35
-        altura_total = 180 + (len(itens) * espaco_item) + 80
-        
+        espaco_item = 40
+        altura_total = 200 + (len(itens) * espaco_item) + 80
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
         
-        # Tenta carregar uma fonte que suporte acentos no Linux/Streamlit Cloud
         try:
-            # Caminho comum para fontes em servidores Linux
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
         except:
-            # Caso falhe, usa a fonte padrão (pode não acentuar bem, mas evita erro)
             font = ImageFont.load_default()
             font_small = ImageFont.load_default()
 
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Desenhar Cabeçalho
         draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font)
-        draw.text((20, 50), f"DATA: {data_br}", fill=(100, 100, 100), font=font_small)
+        draw.text((20, 55), f"DATA: {data_br}", fill=(100, 100, 100), font=font_small)
         
-        y_linha = 100
+        y_linha = 110
         if motivo:
             motivo_limpo = motivo.encode('utf-8').decode('utf-8').upper()
-            draw.text((20, 80), f"MOTIVO: {motivo_limpo}", fill=(0, 50, 150), font=font_small)
-            y_linha = 120
+            draw.text((20, 90), f"MOTIVO: {motivo_limpo}", fill=(0, 50, 150), font=font_small)
+            y_linha = 130
         
-        draw.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=2)
-        
+        draw.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=3)
         y = y_linha + 20
         for item in itens:
-            # Força a codificação UTF-8 em cada item
-            item_formatado = f"[X] {item.encode('utf-8').decode('utf-8')}"
-            draw.text((30, y), item_formatado, fill=(0, 0, 0), font=font_small)
+            draw.text((30, y), f"[X] {item.encode('utf-8').decode('utf-8')}", fill=(0, 0, 0), font=font_small)
             y += espaco_item
             
-        draw.text((20, y + 20), "by rvrs", fill=(150, 150, 150), font=font_small)
-        
+        draw.text((20, y + 20), "by ®rvrs", fill=(150, 150, 150), font=font_small)
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='PNG')
         return img_byte_arr.getvalue()
@@ -106,14 +96,20 @@ class ListaComprasPro:
         assinatura = "\n\nby ®rvrs"
         return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
 
-# --- Interface Streamlit ---
-st.set_page_config(page_title="Lista Pro rvrs", layout="wide")
+# --- Layout Mobile ---
+st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 3px solid #000; text-transform: uppercase; font-size: 30px; }
-    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 5px 15px; text-transform: uppercase; font-size: 16px !important; }
-    .stCheckbox { margin-bottom: -15px; }
+    /* Ajustes para ecrãs pequenos */
+    .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 3px solid #000; padding: 10px; font-size: 24px; }
+    .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 8px; text-align: center; font-size: 14px !important; border-radius: 5px; }
+    
+    /* Aumentar área de toque do checkbox */
+    .stCheckbox { padding: 10px 0; border-bottom: 0.5px solid #f0f0f0; }
+    
+    /* Botões da barra lateral */
+    div.stButton > button { height: 3em; font-weight: bold; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -121,18 +117,16 @@ app = ListaComprasPro()
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("📋 CONFIGURAÇÃO")
-    motivo_compra = st.text_input("Motivo da Compra:", placeholder="Ex: Festa na Fazenda", key=f"motivo_ti_{st.session_state.reset_trigger}")
+    st.header("📋 MENU")
+    motivo_compra = st.text_input("📍 Motivo:", placeholder="Onde vais comprar?", key=f"motivo_ti_{st.session_state.reset_trigger}")
     
-    st.divider()
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_tudo()
     
     st.divider()
     with st.form("add_item_form", clear_on_submit=True):
-        novo = st.text_input("➕ Adicionar Item (Outros):")
-        submitted = st.form_submit_button("ADICIONAR ITEM", use_container_width=True)
-        if submitted and novo:
+        novo = st.text_input("➕ Novo Item:")
+        if st.form_submit_button("ADICIONAR", use_container_width=True):
             app.adicionar_item(novo)
     
     st.divider()
@@ -140,16 +134,13 @@ with st.sidebar:
 
     if selecionados:
         url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
-        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;margin-bottom:10px;">ENVIAR TEXTO</div></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:18px;border-radius:12px;text-align:center;font-weight:bold;margin-bottom:12px;font-size:16px;">📲 ENVIAR WHATSAPP</div></a>', unsafe_allow_html=True)
         
         img_bytes = app.gerar_imagem(sorted(selecionados, key=remover_acentos), motivo_compra)
         st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name=f"lista_{motivo_compra or 'compras'}.png", mime="image/png", use_container_width=True)
-    else:
-        st.info("Selecione itens na lista.")
 
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
-
 for i, (cat, produtos) in enumerate(todas_cats):
     target_col = [col1, col2, col3][i % 3]
     with target_col:
@@ -157,6 +148,4 @@ for i, (cat, produtos) in enumerate(todas_cats):
         for p in produtos:
             st.checkbox(p, key=f"check_{p}_{cat}")
 
-st.write("<br><br>", unsafe_allow_html=True)
-st.markdown("---")
-st.markdown("<p style='text-align:center; color:grey;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
+st.markdown("<hr><p style='text-align:center; color:grey;'>2026 | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
