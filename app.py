@@ -37,7 +37,10 @@ class ListaComprasPro:
         corpo = ""
         for item in lista_final:
             corpo += f"[X] {item}\n"
-        texto_completo = cabecalho + corpo
+        
+        # Adicionando os 2 espaços e a assinatura no final da mensagem do WhatsApp
+        assinatura_wa = "\n\nby ®rvrs"
+        texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
 # --- Interface Streamlit ---
@@ -65,7 +68,6 @@ with st.sidebar:
     # Identifica itens marcados
     selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
 
-    # Botão Único: Enviar Lista
     if selecionados:
         link = app.gerar_whatsapp(selecionados)
         st.markdown(f"""
@@ -76,7 +78,7 @@ with st.sidebar:
             </a>
         """, unsafe_allow_html=True)
     else:
-        st.info("Selecione itens na lista ao lado para habilitar o envio.")
+        st.info("Selecione itens na lista para enviar.")
 
 # --- Listagem Principal ---
 col1, col2 = st.columns(2)
@@ -92,3 +94,12 @@ for i, (cat, produtos) in enumerate(todas_cats):
             c1.checkbox(p, key=f"check_{p}")
             if c2.button("❌", key=f"del_{p}"):
                 app.remover_item(cat, p)
+
+# --- Rodapé (Footer) ---
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center; color: grey; font-size: 0.8em;'>"
+    "2026 Lista de Compras | Desenvolvido por ®rvrs"
+    "</div>", 
+    unsafe_allow_html=True
+)
