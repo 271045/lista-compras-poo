@@ -10,7 +10,7 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Itens do arquivo com os novos acréscimos (Flocão e Farinha de Milho)
+            # Itens sincronizados com o arquivo e novos acréscimos no Açougue
             raw_data = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", 
@@ -45,8 +45,9 @@ class ListaComprasPro:
                 ],
                 "AÇOUGUE": [
                     "ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", 
-                    "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FRALDINHA", 
-                    "FRANGO", "LINGUA", "LINGUIÇA", "LOMBO", "MÚSCULO", "PICANHA"
+                    "COSTELÃO", "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", 
+                    "FILÉ DE PEITO", "FRALDINHA", "FRANGO", "LINGUA", "LINGUIÇA", 
+                    "LOMBO", "MÚSCULO", "PICANHA"
                 ],
                 "TEMPEROS": [
                     "AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "OREGANO", 
@@ -57,7 +58,7 @@ class ListaComprasPro:
                 ],
                 "OUTROS": []
             }
-            # Aplica a ordem alfabética em todas as categorias
+            # Organiza todas as categorias em ordem alfabética
             st.session_state.categorias = {k: sorted(v) for k, v in raw_data.items()}
 
     def adicionar_item(self, nome):
