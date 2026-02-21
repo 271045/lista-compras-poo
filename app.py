@@ -47,7 +47,8 @@ class ListaComprasPro:
     def gerar_imagem(self, itens, motivo):
         largura = 550
         espaco_item = 35
-        altura_total = 150 + (len(itens) * espaco_item) + 80
+        # Altura aumentada para comportar o espaço extra no cabeçalho
+        altura_total = 180 + (len(itens) * espaco_item) + 80
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         d = ImageDraw.Draw(img)
@@ -55,15 +56,19 @@ class ListaComprasPro:
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Cabeçalho da Imagem
+        # Cabeçalho da Imagem com espaço extra
         d.text((20, 20), f"LISTA DE COMPRAS", fill=(0, 0, 0))
         d.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
+        
+        y_linha = 100
         if motivo:
-            d.text((20, 70), f"MOTIVO: {motivo.upper()}", fill=(0, 50, 150))
+            # Pula um espaço (y maior) para o motivo
+            d.text((20, 85), f"MOTIVO: {motivo.upper()}", fill=(0, 50, 150))
+            y_linha = 120
         
-        d.line((20, 100, 530, 100), fill=(0, 0, 0), width=2)
+        d.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=2)
         
-        y = 120
+        y = y_linha + 20
         for item in itens:
             d.text((30, y), f"[X] {item}", fill=(0, 0, 0))
             y += espaco_item
@@ -81,7 +86,8 @@ class ListaComprasPro:
         
         cabecalho = f"*--- LISTA DE COMPRAS ({data_br}) ---*\n"
         if motivo:
-            cabecalho += f"*MOTIVO:* {motivo.upper()}\n"
+            # Adiciona uma linha em branco (\n extra) entre a data e o motivo
+            cabecalho += f"\n*MOTIVO:* {motivo.upper()}\n"
         
         corpo = "\n" + "\n".join([f"[X] {item}" for item in lista_final])
         assinatura = "\n\nby ®rvrs"
@@ -104,7 +110,6 @@ st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=Tr
 # --- Sidebar ---
 with st.sidebar:
     st.header("📋 CONFIGURAÇÃO")
-    # NOVO CAMPO: Motivo da Compra
     motivo_compra = st.text_input("Motivo da Compra:", placeholder="Ex: Festa na Fazenda")
     
     st.divider()
@@ -120,11 +125,9 @@ with st.sidebar:
     selecionados = [k.split("_")[1] for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if selecionados:
-        # Enviar Texto
         url_wa = app.gerar_whatsapp_texto(selecionados, motivo_compra)
         st.markdown(f'<a href="{url_wa}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;margin-bottom:10px;">ENVIAR TEXTO</div></a>', unsafe_allow_html=True)
         
-        # Gerar Imagem
         img_bytes = app.gerar_imagem(sorted(selecionados, key=remover_acentos), motivo_compra)
         st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name=f"lista_{motivo_compra or 'compras'}.png", mime="image/png", use_container_width=True)
     else:
