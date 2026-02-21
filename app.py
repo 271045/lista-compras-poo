@@ -10,14 +10,41 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Itens ajustados conforme o conteúdo do seu PDF
+            # Todos os itens extraídos fielmente do seu arquivo PDF
             st.session_state.categorias = {
-                "MERCEARIA": ["AÇÚCAR", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "CAFÉ", "EXTRATO TOMATE", "FARINHA DE TRIGO", "FEIJÃO", "MACARRÃO", "MAIONESE", "MILHO VERDE", "MOLHO INGLÊS", "ÓLEO"],
-                "LIMPEZA": ["ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BOMBRIL", "DETERGENTE", "DESINFETANTE", "SABÃO EM PÓ", "SABÃO EM BARRA", "SACO DE LIXO", "VEJA"],
-                "HIGIENE": ["ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "SABONETE", "SHAMPOO"],
-                "FRIOS & LATICÍNIOS": ["CREME DE LEITE", "LEITE", "LEITE CONDENSADO", "MANTEIGA", "MUSSARELA", "OVOS", "PRESUNTO", "SALSICHA", "YOGURTE"],
-                "FRUTAS & VERDURAS": ["ALHO", "BANANA", "BATATA", "CEBOLA", "CENOURA", "LARANJA", "LIMÃO", "MAÇÃ", "TOMATE"],
-                "AÇOUGUE": ["BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", "FRANGO", "LINGUIÇA"],
+                "MERCEARIA": [
+                    "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "BOLACHAS", "CAFÉ", 
+                    "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "EXTRATO TOMATE", 
+                    "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", "FEIJÃO", 
+                    "FERMENTO", "FILTRO CAFÉ", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", "LEITE", 
+                    "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", 
+                    "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", 
+                    "MOSTARDA", "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"
+                ],
+                "LIMPEZA": [
+                    "DETERGENTE", "ÁGUA SANITÁRIA", "ÁLCOOL", "LISOFORME", "AMACIANTE", "SABÃO EM PÓ", 
+                    "SABÃO BARRA", "SACO DE LIXO", "DESINFETANTE", "VEJA", "BICARBONATO", "PEDRA SANITÁRIA", 
+                    "RODO", "VASSOURA", "LUSTRA MÓVEIS", "BOMBRIL", "BUCHA COZINHA", "PEROBA", "PASTA PINHO", 
+                    "CÊRA", "BUCHA BANHO", "LÂMPADA", "PAPEL ALUMÍNIO", "VELA"
+                ],
+                "HIGIENE": [
+                    "ACETONA", "ALGODÃO", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "CONDICIONADOR", 
+                    "PASTA DE DENTE", "DESODORANTE", "ESCOVA DE DENTE", "PRESTO-BARBA", "SHAMPOO", 
+                    "SABONETE LÍQUIDO", "SABONETE"
+                ],
+                "FRIOS": [
+                    "CHEDDAR", "MANTEIGA", "MARGARINA", "MORTADELA", "MUSSARELA", "NUGGETS", 
+                    "PASTEL (MASSA)", "PRESUNTO", "QUEIJO MINAS", "QUEIJO RALADO", "REQUEIJÃO", 
+                    "RICOTA", "SALSICHA", "YOGURTE"
+                ],
+                "AÇOUGUE": [
+                    "BACON", "BIFE (BOI)", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", "CUPIM", 
+                    "FRANGO", "LINGUIÇA", "LOMBO", "PEIXE"
+                ],
+                "HORTIFRUTI": [
+                    "ALFACE", "ALHO", "BANANA", "BATATA", "CEBOLA", "CENOURA", "LARANJA", 
+                    "LIMÃO", "MAÇÃ", "MAMÃO", "OVOS", "TOMATE"
+                ],
                 "OUTROS": []
             }
 
@@ -45,33 +72,30 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Configurações de Design (Igual ao PDF) ---
+# --- Interface Estilizada ---
 st.set_page_config(page_title="Lista de Compras", layout="wide")
 
 st.markdown("""
     <style>
-    /* Estilo do Título igual ao cabeçalho do PDF */
     .main-title {
-        font-family: 'Arial', sans-serif;
-        color: #1a1a1a;
+        font-family: 'Arial Black', sans-serif;
+        color: #000;
         text-align: center;
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
-        margin-bottom: 25px;
+        border-bottom: 3px solid #000;
+        padding-bottom: 5px;
         text-transform: uppercase;
+        font-size: 32px;
     }
-    /* Estilo das Subcategorias */
     .stMarkdown h3 {
-        background-color: #f0f2f6;
-        padding: 5px 10px;
-        border-left: 5px solid #333;
-        font-size: 18px !important;
-        margin-top: 20px !important;
+        background-color: #000;
+        color: #fff !important;
+        padding: 4px 12px;
+        font-size: 16px !important;
+        text-transform: uppercase;
+        margin-top: 15px !important;
+        letter-spacing: 1px;
     }
-    /* Deixar os checkboxes mais limpos */
-    .stCheckbox {
-        padding: 2px 0px;
-    }
+    .stCheckbox { margin-bottom: -12px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -79,51 +103,38 @@ app = ListaComprasPro()
 
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
-# --- Barra Lateral ---
+# --- Sidebar ---
 with st.sidebar:
-    st.header("PAINEL DE CONTROLO")
-    if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
+    st.header("CONTROLE")
+    if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
         app.limpar_selecoes()
-    
     st.divider()
     st.subheader("➕ NOVO ITEM")
-    novo_nome = st.text_input("Nome do produto:")
+    novo_nome = st.text_input("Item:")
     if st.button("ADICIONAR", use_container_width=True):
         app.adicionar_item(novo_nome)
-
     st.divider()
+    
     selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
-
     if selecionados:
         link = app.gerar_whatsapp(selecionados)
-        st.markdown(f"""
-            <a href="{link}" target="_blank" style="text-decoration: none;">
-                <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px;">
-                    ENVIAR PARA WHATSAPP
-                </div>
-            </a>
-        """, unsafe_allow_html=True)
-    else:
-        st.info("Selecione os itens na lista.")
+        st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR LISTA PARA WHATSAPP</div></a>', unsafe_allow_html=True)
 
-# --- Corpo da Lista (Colunas Iguais ao PDF) ---
-col1, col2 = st.columns(2)
-categorias_itens = list(st.session_state.categorias.items())
-meio = (len(categorias_itens) + 1) // 2
+# --- Layout de Colunas do PDF ---
+col1, col2, col3 = st.columns(3) # Usei 3 colunas para acomodar melhor todos os itens no PC
+todas_cats = list(st.session_state.categorias.items())
 
-for i, (cat, produtos) in enumerate(categorias_itens):
-    target_col = col1 if i < meio else col2
+for i, (cat, produtos) in enumerate(todas_cats):
+    if i % 3 == 0: target_col = col1
+    elif i % 3 == 1: target_col = col2
+    else: target_col = col3
+    
     with target_col:
         st.subheader(cat)
-        # Se for a categoria Outros e estiver vazia, mostra aviso discreto
-        if cat == "OUTROS" and not produtos:
-            st.caption("Use a lateral para adicionar itens extras.")
-        
-        # Organização dos itens
         for p in produtos:
             st.checkbox(p, key=f"check_{p}")
 
 # --- Rodapé ---
 st.write("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: grey; font-family: sans-serif;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:grey;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
