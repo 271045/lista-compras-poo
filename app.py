@@ -2,15 +2,21 @@
 import streamlit as st
 from datetime import datetime
 import urllib.parse
+import unicodedata
+
 try:
     import pytz
 except ImportError:
     pass
 
+# Função auxiliar para remover acentos na hora de ordenar
+def remover_acentos(texto):
+    return ''.join(c for c in unicodedata.normalize('NFD', texto)
+                  if unicodedata.category(c) != 'Mn')
+
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Itens sincronizados com o arquivo e novos acréscimos no Açougue
             raw_data = {
                 "MERCEARIA": [
                     "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", 
@@ -58,14 +64,17 @@ class ListaComprasPro:
                 ],
                 "OUTROS": []
             }
-            # Organiza todas as categorias em ordem alfabética
-            st.session_state.categorias = {k: sorted(v) for k, v in raw_data.items()}
+            # Ordenação inteligente: ignora acentos na comparação
+            st.session_state.categorias = {
+                k: sorted(v, key=remover_acentos) for k, v in raw_data.items()
+            }
 
     def adicionar_item(self, nome):
         nome_upper = nome.upper()
         if nome_upper and nome_upper not in st.session_state.categorias["OUTROS"]:
             st.session_state.categorias["OUTROS"].append(nome_upper)
-            st.session_state.categorias["OUTROS"].sort()
+            # Ordena a lista de outros também ignorando acentos
+            st.session_state.categorias["OUTROS"].sort(key=remover_acentos)
             st.rerun()
 
     def limpar_selecoes(self):
@@ -75,7 +84,8 @@ class ListaComprasPro:
         st.rerun()
 
     def gerar_whatsapp(self, lista_final):
-        lista_final.sort()
+        # Ordena a lista final enviada para o WhatsApp ignorando acentos
+        lista_final.sort(key=remover_acentos)
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         cabecalho = f"--- LISTA DE COMPRAS ({data_br}) ---\n\n"
@@ -86,7 +96,7 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface ---
+# --- Interface Estilizada ---
 st.set_page_config(page_title="Lista de Compras", layout="wide")
 
 st.markdown("""
