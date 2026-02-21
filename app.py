@@ -10,16 +10,16 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
-            # Lista exata extraída do seu arquivo PDF
+            # Inventário extraído exatamente do seu documento
             st.session_state.categorias = {
                 "MERCEARIA": [
-                    "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "BOLACHAS", "CAFÉ", 
-                    "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "EXTRATO TOMATE", 
-                    "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", "FEIJÃO", 
-                    "FERMENTO", "FILTRO CAFÉ", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", "LEITE", 
-                    "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", 
-                    "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", 
-                    "MOSTARDA", "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"
+                    "AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", 
+                    "CAFÉ", "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "ESSÊNCIA", 
+                    "EXTRATO TOMATE", "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", 
+                    "FEIJÃO", "FERMENTO", "FILTRO CAFÉ", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", 
+                    "LEITE", "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", 
+                    "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", "MOSTARDA", 
+                    "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"
                 ],
                 "LIMPEZA": [
                     "DETERGENTE", "ÁGUA SANITÁRIA", "ÁLCOOL", "LISOFORME", "AMACIANTE", "SABÃO EM PÓ", 
@@ -33,24 +33,24 @@ class ListaComprasPro:
                     "SABONETE LÍQUIDO", "SABONETE"
                 ],
                 "FRIOS": [
-                    "CHEDDAR", "MANTEIGA", "MARGARINA", "MORTADELA", "MUSSARELA", "NUGGETS", 
-                    "PASTEL (MASSA)", "PRESUNTO", "QUEIJO MINAS", "QUEIJO RALADO", "REQUEIJÃO", 
-                    "RICOTA", "SALSICHA", "YOGURTE"
+                    "CHEDDAR", "EMPANADO", "GORGONZOLA", "HAMBURGUER", "IOGURTE", "MANTEIGA", "MARGARINA", 
+                    "MORTADELA", "MUSSARELA", "PASTEL (MASSA)", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "SALSICHA"
+                ],
+                "FRUTAS / VERDURAS": [
+                    "ABÓBORA", "ALFACE", "ALHO", "BANANA", "BATATA", "BETERRABA", "CEBOLA", "CENOURA", 
+                    "CHUCHU", "LARANJA", "LIMÃO", "MAÇÃ", "MAMÃO", "MELANCIA", "MELÃO", "PÊRA", "TOMATE"
                 ],
                 "AÇOUGUE": [
-                    "BACON", "BIFE (BOI)", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", "CUPIM", 
-                    "FRANGO", "LINGUIÇA", "LOMBO", "PEIXE"
+                    "ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", 
+                    "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FRALDINHA", "FRANGO", "LINGUA", "LINGUIÇA", 
+                    "LOMBO", "MÚSCULO", "PICANHA"
                 ],
                 "TEMPEROS": [
-                    "ALHO E SAL", "CALDO DE CARNE", "CANELA", "FUMAÇA", "PÁPRICA", "AÇÚCAR MASCAVO ", 
-                    "CRAVO", "LOURO", "NOZ-MOSCADA", "ORÉGANO", "CEBOLA EM PÓ", "ALHO EM PÓ", "PIMENTA DO REINO"
+                    "AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "OREGANO", "PÁPRICA DEFUMADA", 
+                    "PÁPRICA PICANTE", "PIMENTA DO REINO"
                 ],
                 "BEBIDAS": [
-                    "ÁGUA MINERAL", "CERVEJA", "REFRIGERANTE", "SUCO", "VINHO"
-                ],
-                "HORTIFRUTI": [
-                    "ALFACE", "ALHO", "BANANA", "BATATA", "CEBOLA", "CENOURA", "LARANJA", 
-                    "LIMÃO", "MAÇÃ", "MAMÃO", "OVOS", "TOMATE"
+                    "ÁGUA MINERAL", "CERVEJA", "ENERGÉTICO", "REFRIGERANTE", "SUCO", "VINHO"
                 ],
                 "OUTROS": []
             }
@@ -79,7 +79,7 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface Estilizada ---
+# --- Layout Visual ---
 st.set_page_config(page_title="Lista de Compras", layout="wide")
 
 st.markdown("""
@@ -101,14 +101,14 @@ st.markdown("""
         text-transform: uppercase;
         margin-top: 15px !important;
     }
-    .stCheckbox { margin-bottom: -12px; }
+    .stCheckbox { margin-bottom: -15px; }
     </style>
     """, unsafe_allow_html=True)
 
 app = ListaComprasPro()
-
 st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
+# --- Sidebar ---
 with st.sidebar:
     st.header("CONTROLE")
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
@@ -124,14 +124,13 @@ with st.sidebar:
     for k, v in st.session_state.items():
         if k.startswith("check_") and v:
             partes = k.split("_")
-            if len(partes) >= 2:
-                selecionados.append(partes[1])
+            if len(partes) >= 2: selecionados.append(partes[1])
 
     if selecionados:
         link = app.gerar_whatsapp(selecionados)
         st.markdown(f'<a href="{link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:15px;border-radius:8px;text-align:center;font-weight:bold;">ENVIAR PARA WHATSAPP</div></a>', unsafe_allow_html=True)
 
-# --- Layout de Colunas ---
+# --- Colunas ---
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 
