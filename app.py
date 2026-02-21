@@ -42,22 +42,17 @@ class ListaComprasPro:
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface Streamlit ---
+# --- Configuração da Página ---
 st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
 
-# CSS para reduzir o espaço entre os itens (Compact Mode)
+# CSS Simplificado: Apenas para ajustar a altura dos botões de lixeira
 st.markdown("""
     <style>
-    [data-testid="stVerticalBlock"] > div {
-        margin-top: -15px;
-        margin-bottom: -15px;
-    }
-    .stCheckbox {
-        margin-bottom: -15px;
-    }
-    button[kind="secondary"] {
-        padding: 0px;
-        height: 25px;
+    .stButton > button {
+        padding: 0px 5px !important;
+        height: 1.8rem !important;
+        border: none !important;
+        background-color: transparent !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -68,7 +63,7 @@ st.title("📝 Lista de Compras")
 
 # Barra Lateral (Sidebar)
 with st.sidebar:
-    st.header("⚙️ Ferramentas")
+    st.header("⚙️ Painel")
     if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
         app.limpar_selecoes()
     
@@ -88,37 +83,31 @@ with st.sidebar:
         link = app.gerar_whatsapp(selecionados)
         st.markdown(f"""
             <a href="{link}" target="_blank" style="text-decoration: none;">
-                <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+                <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px;">
                     ENVIAR LISTA [X]
                 </div>
             </a>
         """, unsafe_allow_html=True)
     else:
-        st.info("Selecione itens na lista.")
+        st.info("Marque os itens abaixo.")
 
 # --- Listagem Principal ---
 col1, col2 = st.columns(2)
 todas_cats = list(st.session_state.categorias.items())
-ponto = len(todas_cats) // 2
+ponto = (len(todas_cats) + 1) // 2
 
 for i, (cat, produtos) in enumerate(todas_cats):
     coluna = col1 if i < ponto else col2
     with coluna:
         st.subheader(cat)
         for p in produtos:
-            c1, c2 = st.columns([6, 1])
-            c1.checkbox(p, key=f"check_{p}")
-            # Trocado X por lixeira 🗑️
-            if c2.button("🗑️", key=f"del_{p}"):
+            # Layout de linha: Checkbox ocupa 80%, Lixeira ocupa 20%
+            c_check, c_del = st.columns([0.8, 0.2])
+            c_check.checkbox(p, key=f"check_{p}")
+            if c_del.button("🗑️", key=f"del_{p}"):
                 app.remover_item(cat, p)
 
 # --- Rodapé ---
-st.markdown("<br><br>", unsafe_allow_html=True)
+st.write("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.markdown(
-    "<div style='text-align: center; color: grey; font-size: 0.8em;'>"
-    "2026 Lista de Compras | Desenvolvido por ®rvrs"
-    "</div>", 
-    unsafe_allow_html=True
-)
-
+st.markdown("<p style='text-align: center; color: grey;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
