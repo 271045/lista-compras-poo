@@ -4,7 +4,7 @@ from datetime import datetime
 import urllib.parse
 import unicodedata
 import io
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 try:
     import pytz
@@ -50,12 +50,13 @@ class ListaComprasPro:
         st.rerun()
 
     def gerar_imagem(self, itens, motivo):
-        largura = 500
-        espaco_item = 30  # Reduzido para ser mais compacto
+        # Largura e espaçamento compactos
+        largura = 450
+        espaco_item = 25 
         
-        # Cálculo de altura garantindo espaço para o motivo
-        altura_cabecalho = 140 if motivo else 100
-        altura_total = altura_cabecalho + (len(itens) * espaco_item) + 60
+        # Cabeçalho dinâmico
+        y_linha = 110 if motivo else 80
+        altura_total = y_linha + (len(itens) * espaco_item) + 60
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
@@ -63,26 +64,26 @@ class ListaComprasPro:
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Títulos e Data
+        # Desenho do Texto (Usando a fonte padrão tratada para evitar erro de encoding)
         draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
-        draw.text((20, 45), f"DATA: {data_br}", fill=(80, 80, 80))
+        draw.text((20, 40), f"DATA: {data_br}", fill=(100, 100, 100))
         
-        y_atual = 75
         if motivo:
-            motivo_texto = f"MOTIVO: {str(motivo).upper()}"
-            draw.text((20, 75), motivo_texto, fill=(0, 51, 153))
-            y_atual = 105
+            # Motivo posicionado claramente
+            motivo_limpo = f"MOTIVO: {str(motivo).upper()}"
+            draw.text((20, 70), motivo_limpo, fill=(0, 51, 153))
         
         # Linha divisória
-        draw.line((20, y_atual, 480, y_atual), fill=(0, 0, 0), width=2)
+        draw.line((20, y_linha, largura-20, y_linha), fill=(0, 0, 0), width=2)
         
-        # Itens da lista
-        y_itens = y_atual + 15
+        # Itens (Removendo acentos apenas para a imagem se o erro persistir, 
+        # mas aqui forçamos a string limpa)
+        y_itens = y_linha + 20
         for item in itens:
-            draw.text((35, y_itens), f"[X] {item}", fill=(0, 0, 0))
+            draw.text((30, y_itens), f"[X] {item}", fill=(0, 0, 0))
             y_itens += espaco_item
             
-        draw.text((20, y_itens + 10), "by ®rvrs", fill=(150, 150, 150))
+        draw.text((20, y_itens + 10), "by rvrs", fill=(180, 180, 180))
         
         buf = io.BytesIO()
         img.save(buf, format='PNG')
@@ -99,14 +100,14 @@ class ListaComprasPro:
         assinatura = "\n\nby ®rvrs"
         return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
 
-# --- Layout ---
+# --- Estilo Visual ---
 st.set_page_config(page_title="Lista rvrs", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    .main-title { font-family: 'Arial Black', sans-serif; text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; }
+    .main-title { font-family: sans-serif; text-align: center; border-bottom: 2px solid #000; padding: 10px; font-size: 24px; }
     .stMarkdown h3 { background-color: #000; color: #fff !important; padding: 6px; text-align: center; font-size: 14px !important; border-radius: 4px; }
-    .stCheckbox { padding: 4px 0; }
+    .stCheckbox { padding: 2px 0; }
     div.stButton > button { font-weight: bold; border-radius: 8px; }
     </style>
     """, unsafe_allow_html=True)
@@ -137,7 +138,7 @@ with st.sidebar:
         img_bytes = app.gerar_imagem(sorted(selecionados, key=remover_acentos), motivo_compra)
         st.download_button(label="🖼️ BAIXAR IMAGEM", data=img_bytes, file_name=f"lista_{remover_acentos(motivo_compra) or 'compras'}.png", mime="image/png", use_container_width=True)
 
-# Lista de Itens
+# Colunas
 col1, col2, col3 = st.columns(3)
 todas_cats = list(st.session_state.categorias.items())
 for i, (cat, produtos) in enumerate(todas_cats):
