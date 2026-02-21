@@ -10,19 +10,21 @@ except ImportError:
 class ListaComprasPro:
     def __init__(self):
         if 'categorias' not in st.session_state:
+            # Itens ajustados conforme o conteúdo do seu PDF
             st.session_state.categorias = {
-                "Mercearia 🍞": ["Arroz", "Feijão", "Açúcar", "Café", "Macarrão", "Óleo", "Farinha de Trigo", "Milho Verde", "Extrato de Tomate", "Biscoitos", "Maionese", "Azeite"],
-                "Limpeza 🧼": ["Sabão em Pó", "Sabão em Barra", "Desinfetante", "Água Sanitária", "Detergente", "Amaciante", "Álcool", "Saco de Lixo", "Bombril", "Veja", "Multiuso"],
-                "Higiene 🪥": ["Pasta de Dente", "Sabonete", "Shampoo", "Condicionador", "Desodorante", "Papel Higiênico", "Fio Dental", "Algodão"],
-                "Frios & Laticínios 🧀": ["Mussarela", "Presunto", "Leite", "Manteiga", "Iogurte", "Requeijão", "Ovos", "Salsicha", "Margarina"],
-                "Frutas & Verduras 🍎": ["Banana", "Maçã", "Batata", "Cebola", "Alho", "Tomate", "Alface", "Limão", "Cenoura"],
-                "Açougue 🥩": ["Carne Moída", "Bife", "Frango", "Linguiça", "Bacon", "Calabresa", "Costelinha"],
-                "Outros 📦": []
+                "MERCEARIA": ["AÇÚCAR", "ARROZ", "AZEITE", "AZEITONA", "BISCOITOS", "CAFÉ", "EXTRATO TOMATE", "FARINHA DE TRIGO", "FEIJÃO", "MACARRÃO", "MAIONESE", "MILHO VERDE", "MOLHO INGLÊS", "ÓLEO"],
+                "LIMPEZA": ["ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BOMBRIL", "DETERGENTE", "DESINFETANTE", "SABÃO EM PÓ", "SABÃO EM BARRA", "SACO DE LIXO", "VEJA"],
+                "HIGIENE": ["ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "SABONETE", "SHAMPOO"],
+                "FRIOS & LATICÍNIOS": ["CREME DE LEITE", "LEITE", "LEITE CONDENSADO", "MANTEIGA", "MUSSARELA", "OVOS", "PRESUNTO", "SALSICHA", "YOGURTE"],
+                "FRUTAS & VERDURAS": ["ALHO", "BANANA", "BATATA", "CEBOLA", "CENOURA", "LARANJA", "LIMÃO", "MAÇÃ", "TOMATE"],
+                "AÇOUGUE": ["BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELINHA", "FRANGO", "LINGUIÇA"],
+                "OUTROS": []
             }
 
     def adicionar_item(self, nome):
-        if nome and nome not in st.session_state.categorias["Outros 📦"]:
-            st.session_state.categorias["Outros 📦"].append(nome)
+        nome_upper = nome.upper()
+        if nome_upper and nome_upper not in st.session_state.categorias["OUTROS"]:
+            st.session_state.categorias["OUTROS"].append(nome_upper)
             st.rerun()
 
     def limpar_selecoes(self):
@@ -35,44 +37,61 @@ class ListaComprasPro:
         lista_final.sort()
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
-        
         cabecalho = f"--- LISTA DE COMPRAS ({data_br}) ---\n\n"
         corpo = ""
         for item in lista_final:
             corpo += f"[X] {item}\n"
-        
         assinatura_wa = "\n\nby ®rvrs"
         texto_completo = cabecalho + corpo + assinatura_wa
         return f"https://wa.me/?text={urllib.parse.quote(texto_completo)}"
 
-# --- Interface Streamlit ---
-st.set_page_config(page_title="Super Lista Pro", page_icon="📝", layout="wide")
+# --- Configurações de Design (Igual ao PDF) ---
+st.set_page_config(page_title="Lista de Compras", layout="wide")
 
-# Estilo para remover margens desnecessárias agora que não há colunas duplas por item
 st.markdown("""
     <style>
-    .stCheckbox { margin-bottom: -10px; }
+    /* Estilo do Título igual ao cabeçalho do PDF */
+    .main-title {
+        font-family: 'Arial', sans-serif;
+        color: #1a1a1a;
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+    }
+    /* Estilo das Subcategorias */
+    .stMarkdown h3 {
+        background-color: #f0f2f6;
+        padding: 5px 10px;
+        border-left: 5px solid #333;
+        font-size: 18px !important;
+        margin-top: 20px !important;
+    }
+    /* Deixar os checkboxes mais limpos */
+    .stCheckbox {
+        padding: 2px 0px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 app = ListaComprasPro()
 
-st.title("📝 Lista de Compras")
+st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=True)
 
+# --- Barra Lateral ---
 with st.sidebar:
-    st.header("⚙️ Painel")
+    st.header("PAINEL DE CONTROLO")
     if st.button("🗑️ LIMPAR MARCAÇÕES", use_container_width=True):
         app.limpar_selecoes()
     
     st.divider()
-    
-    st.subheader("➕ Novo Item (Outros)")
+    st.subheader("➕ NOVO ITEM")
     novo_nome = st.text_input("Nome do produto:")
-    if st.button("Adicionar em Outros", use_container_width=True):
+    if st.button("ADICIONAR", use_container_width=True):
         app.adicionar_item(novo_nome)
 
     st.divider()
-
     selecionados = [k.replace("check_", "") for k, v in st.session_state.items() if k.startswith("check_") and v]
 
     if selecionados:
@@ -80,29 +99,31 @@ with st.sidebar:
         st.markdown(f"""
             <a href="{link}" target="_blank" style="text-decoration: none;">
                 <div style="background-color: #25D366; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px;">
-                    ENVIAR LISTA [X]
+                    ENVIAR PARA WHATSAPP
                 </div>
             </a>
         """, unsafe_allow_html=True)
     else:
-        st.info("Marque itens na lista.")
+        st.info("Selecione os itens na lista.")
 
-# --- Listagem Principal ---
+# --- Corpo da Lista (Colunas Iguais ao PDF) ---
 col1, col2 = st.columns(2)
-todas_cats = list(st.session_state.categorias.items())
-ponto = (len(todas_cats) + 1) // 2
+categorias_itens = list(st.session_state.categorias.items())
+meio = (len(categorias_itens) + 1) // 2
 
-for i, (cat, produtos) in enumerate(todas_cats):
-    coluna = col1 if i < ponto else col2
-    with coluna:
+for i, (cat, produtos) in enumerate(categorias_itens):
+    target_col = col1 if i < meio else col2
+    with target_col:
         st.subheader(cat)
-        if not produtos and cat == "Outros 📦":
-            st.write("*Adicione itens na lateral.*")
+        # Se for a categoria Outros e estiver vazia, mostra aviso discreto
+        if cat == "OUTROS" and not produtos:
+            st.caption("Use a lateral para adicionar itens extras.")
+        
+        # Organização dos itens
         for p in produtos:
-            # Removida a coluna da lixeira, agora é uma linha simples
             st.checkbox(p, key=f"check_{p}")
 
 # --- Rodapé ---
 st.write("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: grey;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: grey; font-family: sans-serif;'>2026 Lista de Compras | Desenvolvido por ®rvrs</p>", unsafe_allow_html=True)
