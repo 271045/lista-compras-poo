@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-# Garante que o Python trate tudo como UTF-8
+# Função para manter a ordem alfabética correta
 def remover_acentos(texto):
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto))
                   if unicodedata.category(c) != 'Mn')
@@ -22,11 +22,11 @@ class ListaComprasPro:
             raw_data = {
                 "MERCEARIA": ["AÇÚCAR", "AMENDOIM", "ARROZ", "AZEITE", "AZEITONA", "BATATA FRITA", "BISCOITOS", "BOLACHAS", "CAFÉ", "CALDO GALINHA", "CHÁ", "COCO RALADO", "CREME DE LEITE", "ERVILHA", "ESSÊNCIA", "EXTRATO TOMATE", "FARINHA DE MILHO", "FARINHA DE TRIGO", "FARINHA MANDIOCA", "FARINHA ROSCA", "FARINHA TEMPERADA", "FEIJÃO", "FERMENTO", "FILTRO CAFÉ", "FLOCÃO DE MILHO", "FÓSFORO", "FUBÁ", "GELATINA", "KETCHUP", "LASANHA", "LEITE", "LEITE CONDENSADO", "LEITE DE COCO", "LENTILHA", "MACARRÃO", "MAIONESE", "MAISENA", "MASSA PIZZA", "MILHO VERDE", "MISTURA P/ BOLO", "MOLHO INGLÊS", "MOLHO TOMATE", "MOSTARDA", "ÓLEO", "OVOS", "PALMITO", "PÓ ROYAL", "TAPIOCA", "TEMPERO", "TODDY"],
                 "LIMPEZA": ["ÁGUA SANITÁRIA", "ÁLCOOL", "AMACIANTE", "BICARBONATO", "BOMBRIL", "BUCHA BANHO", "BUCHA COZINHA", "CÊRA", "DESINFETANTE", "DETERGENTE", "LÂMPADA", "LISOFORME", "LUSTRA MÓVEIS", "PAPEL ALUMÍNIO", "PASTA PINHO", "PEDRA SANITÁRIA", "PEROBA", "RODO", "SABÃO BARRA", "SABÃO EM PÓ", "SACO DE LIXO", "VASSOURA", "VEJA", "VELA"],
-                "HIGIENE": ["ACETONA", "ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "PRESTO-BARBA", "SABONETE", "SABONETE LÍQUIDO", "SHAMPOO"],
+                "HIGIENE": ["ACETONA", "ALGODÃO", "CONDICIONADOR", "DESODORANTE", "ESCOVA DE DENTE", "FIO DENTAL", "GUARDANAPO", "PAPEL HIGIÊNICO", "PASTA DE DENTE", "PRESTO-BARBA", "SHAMPOO", "SABONETE LÍQUIDO", "SABONETE"],
                 "FRIOS": ["CHEDDAR", "EMPANADO", "GORGONZOLA", "HAMBURGUER", "IOGURTE", "MANTEIGA", "MARGARINA", "MORTADELA", "MUSSARELA", "PASTEL (MASSA)", "PRESUNTO", "QUEIJO", "REQUEIJÃO", "SALSICHA"],
                 "FRUTAS / VERDURAS": ["ABÓBORA", "ALFACE", "ALHO", "BANANA", "BATATA", "BETERRABA", "CEBOLA", "CENOURA", "CHUCHU", "LARANJA", "LIMÃO", "MAÇÃ", "MAMÃO", "MELANCIA", "MELÃO", "PÊRA", "TOMATE"],
-                "AÇOUGUE": ["ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELÃO", "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FILÉ DE PEITO", "FRALDINHA", "FRANGO", "LINGUA", "LINGUIÇA", "LOMBO", "MÚSCULO", "PICANHA"],
-                "TEMPEROS": ["AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "OREGANO", "PÁPRICA DEFUMADA", "PÁPRICA PICANTE", "PIMENTA DO REINO"],
+                "AÇOUGUE": ["ALCATRA", "ASINHA", "BACON", "BIFE", "CALABRESA", "CARNE MOÍDA", "COSTELÃO", "COSTELINHA", "COXINHA", "CUPIM", "FÍGADO", "FILÉ", "FILÉ DE PEITO", "FRALDINHA", "FRANGO", "LÍNGUA", "LINGUIÇA", "LOMBO", "MÚSCULO", "PICANHA"],
+                "TEMPEROS": ["AÇÚCAR MASCAVO", "ALHO EM PÓ", "CEBOLA EM PÓ", "ORÉGANO", "PÁPRICA DEFUMADA", "PÁPRICA PICANTE", "PIMENTA DO REINO"],
                 "BEBIDAS": ["ÁGUA MINERAL", "CERVEJA", "ENERGÉTICO", "REFRIGERANTE", "SUCO", "VINHO"],
                 "OUTROS": []
             }
@@ -54,34 +54,42 @@ class ListaComprasPro:
         espaco_item = 35
         altura_total = 180 + (len(itens) * espaco_item) + 80
         
-        # Criando imagem em RGB para garantir suporte a cores
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
-        d = ImageDraw.Draw(img)
+        draw = ImageDraw.Draw(img)
         
+        # Tenta carregar uma fonte que suporte acentos no Linux/Streamlit Cloud
+        try:
+            # Caminho comum para fontes em servidores Linux
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
+        except:
+            # Caso falhe, usa a fonte padrão (pode não acentuar bem, mas evita erro)
+            font = ImageFont.load_default()
+            font_small = ImageFont.load_default()
+
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Escrevendo textos (Pillow usa UTF-8 por padrão se a fonte permitir)
-        d.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0))
-        d.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
+        # Desenhar Cabeçalho
+        draw.text((20, 20), "LISTA DE COMPRAS", fill=(0, 0, 0), font=font)
+        draw.text((20, 50), f"DATA: {data_br}", fill=(100, 100, 100), font=font_small)
         
         y_linha = 100
         if motivo:
-            # Forçando conversão para string limpa
-            motivo_texto = str(motivo).upper()
-            d.text((20, 85), f"MOTIVO: {motivo_texto}", fill=(0, 50, 150))
+            motivo_limpo = motivo.encode('utf-8').decode('utf-8').upper()
+            draw.text((20, 80), f"MOTIVO: {motivo_limpo}", fill=(0, 50, 150), font=font_small)
             y_linha = 120
         
-        d.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=2)
+        draw.line((20, y_linha, 530, y_linha), fill=(0, 0, 0), width=2)
         
         y = y_linha + 20
         for item in itens:
-            # Garantindo que o item seja tratado como string UTF-8
-            texto_item = f"[X] {str(item)}"
-            d.text((30, y), texto_item, fill=(0, 0, 0))
+            # Força a codificação UTF-8 em cada item
+            item_formatado = f"[X] {item.encode('utf-8').decode('utf-8')}"
+            draw.text((30, y), item_formatado, fill=(0, 0, 0), font=font_small)
             y += espaco_item
             
-        d.text((20, y + 20), "by rvrs", fill=(150, 150, 150))
+        draw.text((20, y + 20), "by rvrs", fill=(150, 150, 150), font=font_small)
         
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='PNG')
@@ -91,16 +99,14 @@ class ListaComprasPro:
         lista_final.sort(key=remover_acentos)
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
-        
         cabecalho = f"*--- LISTA DE COMPRAS ({data_br}) ---*\n"
         if motivo:
-            cabecalho += f"\n*MOTIVO:* {str(motivo).upper()}\n"
-        
-        corpo = "\n" + "\n".join([f"[X] {str(item)}" for item in lista_final])
+            cabecalho += f"\n*MOTIVO:* {motivo.upper()}\n"
+        corpo = "\n" + "\n".join([f"[X] {item}" for item in lista_final])
         assinatura = "\n\nby ®rvrs"
         return f"https://wa.me/?text={urllib.parse.quote(cabecalho + corpo + assinatura)}"
 
-# --- Interface ---
+# --- Interface Streamlit ---
 st.set_page_config(page_title="Lista Pro rvrs", layout="wide")
 
 st.markdown("""
