@@ -38,7 +38,12 @@ class ListaComprasPro:
             st.session_state.categorias["OUTROS"].sort(key=remover_acentos)
             st.rerun()
 
-    def limpar_selecoes(self):
+    def limpar_tudo(self):
+        # Limpa o campo de texto do motivo
+        if 'motivo_input' in st.session_state:
+            st.session_state.motivo_input = ""
+        
+        # Desmarca todos os checkboxes
         for chave in st.session_state.keys():
             if chave.startswith("check_"):
                 st.session_state[chave] = False
@@ -47,7 +52,6 @@ class ListaComprasPro:
     def gerar_imagem(self, itens, motivo):
         largura = 550
         espaco_item = 35
-        # Altura aumentada para comportar o espaço extra no cabeçalho
         altura_total = 180 + (len(itens) * espaco_item) + 80
         
         img = Image.new('RGB', (largura, altura_total), color=(255, 255, 255))
@@ -56,13 +60,11 @@ class ListaComprasPro:
         fuso_br = pytz.timezone('America/Sao_Paulo')
         data_br = datetime.now(fuso_br).strftime("%d/%m/%Y")
         
-        # Cabeçalho da Imagem com espaço extra
         d.text((20, 20), f"LISTA DE COMPRAS", fill=(0, 0, 0))
         d.text((20, 45), f"DATA: {data_br}", fill=(100, 100, 100))
         
         y_linha = 100
         if motivo:
-            # Pula um espaço (y maior) para o motivo
             d.text((20, 85), f"MOTIVO: {motivo.upper()}", fill=(0, 50, 150))
             y_linha = 120
         
@@ -86,7 +88,6 @@ class ListaComprasPro:
         
         cabecalho = f"*--- LISTA DE COMPRAS ({data_br}) ---*\n"
         if motivo:
-            # Adiciona uma linha em branco (\n extra) entre a data e o motivo
             cabecalho += f"\n*MOTIVO:* {motivo.upper()}\n"
         
         corpo = "\n" + "\n".join([f"[X] {item}" for item in lista_final])
@@ -110,11 +111,12 @@ st.markdown('<h1 class="main-title">Lista de Compras</h1>', unsafe_allow_html=Tr
 # --- Sidebar ---
 with st.sidebar:
     st.header("📋 CONFIGURAÇÃO")
-    motivo_compra = st.text_input("Motivo da Compra:", placeholder="Ex: Festa na Fazenda")
+    # Adicionado a 'key' para permitir que a função de limpeza resete o campo
+    motivo_compra = st.text_input("Motivo da Compra:", placeholder="Ex: Festa na Fazenda", key="motivo_input")
     
     st.divider()
     if st.button("🗑️ LIMPAR TUDO", use_container_width=True):
-        app.limpar_selecoes()
+        app.limpar_tudo()
     
     st.divider()
     novo = st.text_input("➕ Novo Item (Outros):")
